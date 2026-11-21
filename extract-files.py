@@ -10,8 +10,23 @@ from extract_utils.main import (
     ExtractUtils,
     ExtractUtilsModule,
 )
+from extract_utils.fixups_lib import (
+    lib_fixups,
+    lib_fixups_user_type,
+)
 from extract_utils.module import ProprietaryFile
 from extract_utils.tools import android_root
+
+
+def lib_fixup_vendor_suffix(lib: str, partition: str, *args, **kwargs):
+    return f'{lib}_{partition}' if partition == 'vendor' else None
+
+
+lib_fixups = {
+    **lib_fixups,
+    ('libmmosal',): lib_fixup_vendor_suffix,
+}  # type: lib_fixups_user_type
+
 
 namespace_imports = [
     'hardware/qcom-caf/sm8250',
@@ -22,10 +37,11 @@ namespace_imports = [
     'vendor/qcom/opensource/display',
 ]
 
-# The stock blobs are used unmodified, so no blob or lib fixups are needed.
+# libmmosal is installed as libmmosal_vendor on the vendor partition.
 module = ExtractUtilsModule(
     'tb9707f',
     'lenovo',
+    lib_fixups=lib_fixups,
     namespace_imports=namespace_imports,
     proprietary_files=[
         ProprietaryFile(

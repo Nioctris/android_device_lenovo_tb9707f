@@ -328,9 +328,5 @@ PRODUCT_PACKAGES += \
     firmware_WCNSS_qcom_cfg.ini_symlink \
     firmware_wlan_mac.bin_symlink
 
-# Wi-Fi Display
-PRODUCT_PACKAGES += \
-    libwfdaac_vendor
-
 # Inherit the proprietary files
 $(call inherit-product, vendor/lenovo/tb9707f/tb9707f-vendor.mk)
