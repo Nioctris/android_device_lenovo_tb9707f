@@ -1,0 +1,17 @@
+#
+# Copyright (C) 2026 The LineageOS Project
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+on early-init
+    mkdir /mnt/vendor/persist 0771 system system
+
+on post-fs-data
+    chown system system /sys/class/backlight/ktz8866-backlight/brightness
+    chmod 0664 /sys/class/backlight/ktz8866-backlight/brightness
+
+on boot
+    # The KTZ8866 is the only panel backlight; the stock ABL leaves a low
+    # level in the chip. Use a readable level until the lights HAL takes over.
+    write /sys/class/backlight/ktz8866-backlight/brightness 128
