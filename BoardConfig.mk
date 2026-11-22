@@ -73,6 +73,7 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=qcom androidboot.console=ttyMSM0 an
 BOARD_KERNEL_CMDLINE += androidboot.fstab_suffix=qcom
 # TODO: Drop the pstore boot diagnostics once the Lineage boot failure is fixed.
 BOARD_KERNEL_CMDLINE += printk.devkmsg=on androidboot.init_fatal_panic=true panic=8 msm_poweroff.download_mode=0
+BOARD_KERNEL_CMDLINE += androidboot.init_fatal_reboot_target=recovery msm_poweroff.panic_reboot_recovery=1
 BOARD_KERNEL_IMAGE_NAME := Image
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_KERNEL_SEPARATED_DTBO := true
