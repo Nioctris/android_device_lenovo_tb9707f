@@ -87,7 +87,10 @@ PRODUCT_PACKAGES += \
     otapreopt_script
 endif
 
-# A/B updates without Virtual A/B
+# Virtual A/B without vendor_boot (stock: ro.virtual_ab.enabled=true, no compression).
+# TARGET_IS_VAB stays false: in the sm8250-common template it means vendor_boot.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch.mk)
+
 PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
