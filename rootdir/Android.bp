@@ -79,3 +79,11 @@ prebuilt_etc {
     sub_dir: "init/hw",
     vendor: true,
 }
+
+// ueventd
+prebuilt_etc {
+    name: "ueventd.qcom.rc",
+    filename: "ueventd.rc",
+    src: "etc/ueventd.qcom.rc",
+    vendor: true,
+}

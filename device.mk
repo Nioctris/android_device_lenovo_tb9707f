@@ -273,7 +273,8 @@ PRODUCT_PACKAGES += \
     init.qcom.rc \
     init.recovery.qcom.rc \
     init.target.rc \
-    init.tb9707f.rc
+    init.tb9707f.rc \
+    ueventd.qcom.rc
 
 # Sensors
 PRODUCT_PACKAGES += \
