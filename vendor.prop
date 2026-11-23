@@ -73,7 +73,8 @@ vendor.audio.feature.record_play_concurency.enable=false
 vendor.audio.feature.snd_mon.enable=true
 vendor.audio.feature.spkr_prot.enable=true
 vendor.audio.feature.src_trkn.enable=true
-vendor.audio.feature.ssrec.enable=true
+# libssrec from stock crashes the source-built audio HAL in ssr_check_usecase
+vendor.audio.feature.ssrec.enable=false
 vendor.audio.feature.usb_offload.enable=true
 vendor.audio.feature.usb_offload_burst_mode.enable=true
 vendor.audio.feature.usb_offload_sidetone_volume.enable=false
