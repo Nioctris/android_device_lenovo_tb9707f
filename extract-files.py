@@ -10,6 +10,10 @@ from extract_utils.main import (
     ExtractUtils,
     ExtractUtilsModule,
 )
+from extract_utils.fixups_blob import (
+    blob_fixup,
+    blob_fixups_user_type,
+)
 from extract_utils.fixups_lib import (
     lib_fixups,
     lib_fixups_user_type,
@@ -27,6 +31,14 @@ lib_fixups = {
     ('libmmosal',): lib_fixup_vendor_suffix,
 }  # type: lib_fixups_user_type
 
+blob_fixups: blob_fixups_user_type = {
+    (
+        'vendor/lib64/libwvhidl.so',
+        'vendor/lib64/mediadrm/libwvdrmengine.so',
+    ): blob_fixup()
+        .add_needed('libcrypto_shim.so'),
+}  # fmt: skip
+
 
 namespace_imports = [
     'hardware/qcom-caf/sm8250',
@@ -41,6 +53,7 @@ namespace_imports = [
 module = ExtractUtilsModule(
     'tb9707f',
     'lenovo',
+    blob_fixups=blob_fixups,
     lib_fixups=lib_fixups,
     namespace_imports=namespace_imports,
     proprietary_files=[
