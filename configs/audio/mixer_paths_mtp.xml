@@ -345,11 +345,10 @@
     <ctl name="SPK2 DSP1 Preload Switch" value="1" />
     <ctl name="SPK1 DSP1 Boot Switch" value="1" />
     <ctl name="SPK2 DSP1 Boot Switch" value="1" />
-    <!-- TB-9707F: speaker calibration is not applied yet, so keep a fixed
-         ceiling of 10 dB analog and -12 dB digital (721; 0 dB is 817 in
-         1/8 dB steps) until it is. -->
-    <ctl name="SPK1 Digital PCM Volume" value="721" />
-    <ctl name="SPK2 Digital PCM Volume" value="721" />
+    <!-- 0 dB digital is 817 (1/8 dB steps); speaker protection and the
+         factory calibration run in the CS35L45 DSP. -->
+    <ctl name="SPK1 Digital PCM Volume" value="817" />
+    <ctl name="SPK2 Digital PCM Volume" value="817" />
 
     <ctl name="SPK1 AMP PCM Gain" value="dB_10" />
     <ctl name="SPK2 AMP PCM Gain" value="dB_10" />
@@ -2497,8 +2496,8 @@
         <ctl name="SPK2 PLL Force Enable Switch" value="1" />
         <ctl name="SPK1 DACPCM Source" value="DSP_TX1" />
         <ctl name="SPK2 DACPCM Source" value="DSP_TX1" />
-        <ctl name="SPK1 AMP PCM Gain" value="dB_10" />
-        <ctl name="SPK2 AMP PCM Gain" value="dB_10" />
+        <ctl name="SPK1 AMP PCM Gain" value="dB_19" />
+        <ctl name="SPK2 AMP PCM Gain" value="dB_19" />
         <ctl name="SPK1 AMP Enable Switch" value="1" />
         <ctl name="SPK2 AMP Enable Switch" value="1" />
         <ctl name="SPK1 AMP Mute" value="0" />
@@ -2508,7 +2507,7 @@
     <path name="speaker-mono">
         <ctl name="SPK1 PLL Force Enable Switch" value="1" />
         <ctl name="SPK1 DACPCM Source" value="DSP_TX1" />
-        <ctl name="SPK1 AMP PCM Gain" value="dB_10" />
+        <ctl name="SPK1 AMP PCM Gain" value="dB_19" />
         <ctl name="SPK1 AMP Enable Switch" value="1" />
         <ctl name="SPK1 AMP Mute" value="0" />
     </path>
@@ -2516,7 +2515,7 @@
     <path name="speaker-mono-2">
         <ctl name="SPK2 PLL Force Enable Switch" value="1" />
         <ctl name="SPK2 DACPCM Source" value="DSP_TX1" />
-        <ctl name="SPK2 AMP PCM Gain" value="dB_10" />
+        <ctl name="SPK2 AMP PCM Gain" value="dB_19" />
         <ctl name="SPK2 AMP Enable Switch" value="1" />
         <ctl name="SPK2 AMP Mute" value="0" />
     </path>
@@ -2632,8 +2631,8 @@
         <ctl name="SPK2 PLL Force Enable Switch" value="1" />
         <ctl name="SPK1 DACPCM Source" value="DSP_TX1" />
         <ctl name="SPK2 DACPCM Source" value="DSP_TX1" />
-        <ctl name="SPK1 AMP PCM Gain" value="dB_10" />
-        <ctl name="SPK2 AMP PCM Gain" value="dB_10" />
+        <ctl name="SPK1 AMP PCM Gain" value="dB_19" />
+        <ctl name="SPK2 AMP PCM Gain" value="dB_19" />
         <ctl name="SPK1 AMP Enable Switch" value="1" />
         <ctl name="SPK2 AMP Enable Switch" value="1" />
         <ctl name="SPK1 AMP Mute" value="0" />
