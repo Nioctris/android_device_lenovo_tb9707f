@@ -171,6 +171,17 @@ $(call soong_config_set_bool,android_hardware_audio,skip_speaker_layout_channel_
 # Camera
 PRODUCT_PACKAGES += \
     android.hardware.camera.provider@2.4-impl \
+    libcamera_metadata.vendor \
+    libcamera2ndk_vendor \
+    vendor.display.config@1.1.vendor \
+    vendor.display.config@1.2.vendor \
+    vendor.display.config@1.3.vendor \
+    vendor.display.config@1.4.vendor \
+    vendor.display.config@1.5.vendor \
+    vendor.display.config@1.6.vendor \
+    vendor.display.config@1.7.vendor \
+    vendor.display.config@1.8.vendor \
+    vendor.display.config@1.9.vendor \
     android.hardware.camera.provider@2.4-service_64
 
 # Consumer IR

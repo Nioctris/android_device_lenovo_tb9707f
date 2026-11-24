@@ -37,6 +37,11 @@ blob_fixups: blob_fixups_user_type = {
         'vendor/lib64/mediadrm/libwvdrmengine.so',
     ): blob_fixup()
         .add_needed('libcrypto_shim.so'),
+    # The camera provider already runs 6 binder threads; asking for 4
+    # aborts ("Binder threadpool cannot be shrunk after starting").
+    'vendor/lib64/vendor.qti.hardware.camera.postproc@1.0-service-impl.so': blob_fixup()
+        .binary_regex_replace(b'\x80\x00\x80\x52\x21\x00\x80\x52',
+                              b'\xc0\x00\x80\x52\x21\x00\x80\x52'),
 }  # fmt: skip
 
 
