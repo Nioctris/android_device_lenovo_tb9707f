@@ -343,10 +343,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     vndservicemanager
 
-# Vibrator
-ifneq ($(TARGET_IS_TABLET),true)
+# Vibrator (PM8150B haptics)
 $(call inherit-product, vendor/qcom/opensource/vibrator/vibrator-vendor-product.mk)
-endif
 
 # Wi-Fi
 PRODUCT_PACKAGES += \
