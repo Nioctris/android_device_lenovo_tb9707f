@@ -1,0 +1,2 @@
+# odm.tblenovo.packagename comes from vendor build.prop
+set_prop(vendor_init, vendor_camera_prop)

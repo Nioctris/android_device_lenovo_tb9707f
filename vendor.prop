@@ -210,6 +210,11 @@ vendor.media.omx=0
 # NFC
 ro.camera.notify_nfc=1
 
+# Camera: CamX picks NV21 for the snapshot YUV buffers only for the ZUI
+# camera client; for any other app it picks NV12 while the GPU node copies
+# NV21 into them, swapping red and blue in every saved photo.
+odm.tblenovo.packagename=com.zui.camera
+
 # OTG
 persist.sys.oem.otg_support=true
 
