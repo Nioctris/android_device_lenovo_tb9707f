@@ -201,7 +201,7 @@
     <!-- Indicate available ColorDisplayManager.COLOR_MODE_xxx. -->
     <integer-array name="config_availableColorModes">
         <item>0</item> <!-- COLOR_MODE_NATURAL   -->
-        <item>1</item> <!-- COLOR_MODE_BOOSTED   -->
+        <item>2</item> <!-- COLOR_MODE_SATURATED: native panel gamut -->
         <item>3</item> <!-- COLOR_MODE_AUTOMATIC -->
     </integer-array>
 
@@ -223,7 +223,7 @@
          currently set composition color space will not be modified.-->
     <integer-array name="config_displayCompositionColorModes">
         <item>0</item> <!-- COLOR_MODE_NATURAL   -->
-        <item>1</item> <!-- COLOR_MODE_BOOSTED   -->
+        <item>2</item> <!-- COLOR_MODE_SATURATED: native panel gamut -->
         <item>2</item> <!-- COLOR_MODE_SATURATED -->
         <item>3</item> <!-- COLOR_MODE_AUTOMATIC -->
     </integer-array>
@@ -286,4 +286,87 @@
          or a single SIM device can have 1 phones/logical modems, but 2 physical slots (one eSIM
          and one pSIM) -->
     <integer name="config_num_physical_slots">2</integer>
+
+    <!-- TB-9707F: auto-brightness, values from the stock Lenovo framework-res -->
+    <bool name="config_automatic_brightness_available">true</bool>
+
+    <!-- Panel calibration: nits for each backlight level (0-255) -->
+    <array name="config_screenBrightnessNits">
+        <item>0</item>
+        <item>4</item>
+        <item>23</item>
+        <item>69</item>
+        <item>116</item>
+        <item>135</item>
+        <item>153</item>
+        <item>189</item>
+        <item>223</item>
+        <item>261</item>
+        <item>295</item>
+        <item>330</item>
+        <item>439</item>
+        <item>470</item>
+    </array>
+    <integer-array name="config_screenBrightnessBacklight">
+        <item>0</item>
+        <item>1</item>
+        <item>11</item>
+        <item>35</item>
+        <item>60</item>
+        <item>70</item>
+        <item>80</item>
+        <item>100</item>
+        <item>120</item>
+        <item>140</item>
+        <item>160</item>
+        <item>180</item>
+        <item>240</item>
+        <item>255</item>
+    </integer-array>
+
+    <!-- Ambient lux thresholds and the target nits for each control point -->
+    <integer-array name="config_autoBrightnessLevels">
+        <item>5</item>
+        <item>30</item>
+        <item>60</item>
+        <item>90</item>
+        <item>150</item>
+        <item>200</item>
+        <item>350</item>
+        <item>450</item>
+        <item>550</item>
+        <item>720</item>
+        <item>950</item>
+        <item>1100</item>
+        <item>1500</item>
+        <item>2000</item>
+        <item>2500</item>
+    </integer-array>
+    <array name="config_autoBrightnessDisplayValuesNits">
+        <item>3</item>
+        <item>27</item>
+        <item>71</item>
+        <item>80</item>
+        <item>80</item>
+        <item>85</item>
+        <item>110</item>
+        <item>140</item>
+        <item>180</item>
+        <item>210</item>
+        <item>250</item>
+        <item>280</item>
+        <item>320</item>
+        <item>353</item>
+        <item>440</item>
+        <item>480</item>
+    </array>
+
+    <integer name="config_autoBrightnessBrighteningLightDebounce">4000</integer>
+    <integer name="config_autoBrightnessDarkeningLightDebounce">4000</integer>
+
+
+    <!-- 120 Hz peak by default; idle may drop to 60 Hz -->
+    <integer name="config_defaultPeakRefreshRate">120</integer>
+    <!-- No default render-rate cap (AOSP caps at 60 otherwise) -->
+    <integer name="config_defaultRefreshRate">0</integer>
 </resources>
