@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Настройки Lenovo</string>
+    <string name="refresh_rate_title">Частота обновления</string>
+    <string name="refresh_rate_fixed_title">Частота обновления</string>
+    <string name="refresh_rate_adaptive_title">Адаптивная частота</string>
+    <string name="refresh_rate_adaptive_summary">Снижать до 60 Гц, когда изображение не меняется</string>
+    <string name="refresh_rate_adaptive_disabled">Доступно только при 120 Гц</string>
+    <string name="refresh_rate_60">60 Гц</string>
+    <string name="refresh_rate_120">120 Гц</string>
+    <string name="refresh_rate_summary_adaptive">120 Гц, адаптивная</string>
+</resources>

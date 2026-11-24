@@ -305,6 +305,16 @@ PRODUCT_PACKAGES += \
     init.tb9707f.rc \
     ueventd.qcom.rc
 
+# LiveDisplay: picture adjustment through SDM. The QDCM modes are left to
+# the platform color modes (they are content modes, not user presets).
+PRODUCT_PACKAGES += \
+    vendor.lineage.livedisplay-service.sdm
+$(call soong_config_set_bool,livedisplay_sdm,enable_dm,false)
+
+# Device settings (refresh rate)
+PRODUCT_PACKAGES += \
+    LenovoParts
+
 # Sensors
 PRODUCT_PACKAGES += \
     android.hardware.sensors@2.0-service.multihal \
