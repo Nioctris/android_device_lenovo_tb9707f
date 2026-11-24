@@ -307,7 +307,9 @@ PRODUCT_PACKAGES += \
 
 # Sensors
 PRODUCT_PACKAGES += \
-    android.hardware.sensors@2.0-service.multihal
+    android.hardware.sensors@2.0-service.multihal \
+    vendor.qti.hardware.display.mapper@1.0.vendor \
+    vendor.qti.hardware.display.mapper@1.1.vendor
 
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
