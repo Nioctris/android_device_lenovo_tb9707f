@@ -9,10 +9,15 @@ android_app {
     srcs: ["src/**/*.java"],
     resource_dirs: ["res"],
     certificate: "platform",
-    sdk_version: "system_current",
-    min_sdk_version: "30",
-    vendor: true,
+    // KeyHandler implements com.android.internal.os.DeviceKeyHandler and is
+    // loaded into system_server, so this needs platform APIs (not on vendor).
+    platform_apis: true,
+    system_ext_specific: true,
     privileged: true,
+
+    optimize: {
+        proguard_flags_files: ["proguard.flags"],
+    },
 
     static_libs: [
         "androidx.preference_preference",

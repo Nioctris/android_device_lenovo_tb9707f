@@ -1,0 +1,5 @@
+# Loaded by name into system_server (config_deviceKeyHandlerClasses).
+-keep class org.lineageos.lenovoparts.KeyHandler {
+    public <init>(android.content.Context);
+    public *;
+}

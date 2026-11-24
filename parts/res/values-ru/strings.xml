@@ -9,4 +9,10 @@
     <string name="refresh_rate_60">60 Гц</string>
     <string name="refresh_rate_120">120 Гц</string>
     <string name="refresh_rate_summary_adaptive">120 Гц, адаптивная</string>
+    <string name="side_switch_title">Переключатель на торце</string>
+    <string name="side_switch_action_title">Действие</string>
+    <string name="side_switch_none">Ничего</string>
+    <string name="side_switch_rotation_lock">Блокировка поворота экрана</string>
+    <string name="side_switch_dnd">Не беспокоить</string>
+    <string name="side_switch_hint">Действие включено, пока переключатель во включённом положении, и выключено в другом.</string>
 </resources>

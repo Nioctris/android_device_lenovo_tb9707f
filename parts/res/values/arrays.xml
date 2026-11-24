@@ -8,4 +8,14 @@
         <item>60</item>
         <item>120</item>
     </string-array>
+    <string-array name="side_switch_entries" translatable="false">
+        <item>@string/side_switch_none</item>
+        <item>@string/side_switch_rotation_lock</item>
+        <item>@string/side_switch_dnd</item>
+    </string-array>
+    <string-array name="side_switch_values" translatable="false">
+        <item>none</item>
+        <item>rotation_lock</item>
+        <item>dnd</item>
+    </string-array>
 </resources>

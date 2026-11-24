@@ -9,4 +9,10 @@
     <string name="refresh_rate_60">60 Hz</string>
     <string name="refresh_rate_120">120 Hz</string>
     <string name="refresh_rate_summary_adaptive">120 Hz, adaptive</string>
+    <string name="side_switch_title">Side switch</string>
+    <string name="side_switch_action_title">Action</string>
+    <string name="side_switch_none">Nothing</string>
+    <string name="side_switch_rotation_lock">Lock screen rotation</string>
+    <string name="side_switch_dnd">Do not disturb</string>
+    <string name="side_switch_hint">The action is on while the switch is in the on position, and off in the other one.</string>
 </resources>
