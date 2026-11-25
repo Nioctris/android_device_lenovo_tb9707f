@@ -1,0 +1,2 @@
+# libswdap (Dolby DAP effect) runs in the audio HAL and talks to DMS
+hal_client_domain(hal_audio_default, hal_dms)

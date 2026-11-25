@@ -3,3 +3,6 @@ odm.tblenovo.                    u:object_r:vendor_camera_prop:s0
 # OTP AWB check results written by the camera HAL
 persist.vendor.main_back_awb.    u:object_r:vendor_camera_prop:s0
 persist.vendor.main_front_awb.   u:object_r:vendor_camera_prop:s0
+
+# Dolby
+vendor.dolby.                    u:object_r:vendor_dolby_prop:s0

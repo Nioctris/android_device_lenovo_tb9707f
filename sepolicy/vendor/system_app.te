@@ -1,0 +1,2 @@
+# Dolby settings app (system uid)
+hal_client_domain(system_app, hal_dms)

@@ -1,0 +1,2 @@
+get_prop(hal_audio_default, vendor_dolby_prop)
+get_prop(hal_dms_default, vendor_dolby_prop)

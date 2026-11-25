@@ -1,0 +1,3 @@
+# Stock Dolby daxService (re-signed with the platform key) drives DMS
+hal_client_domain(platform_app, hal_dms)
+hal_client_domain(platform_app_36, hal_dms)

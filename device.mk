@@ -327,6 +327,10 @@ $(call soong_config_set_bool,livedisplay_sdm,enable_dm,false)
 PRODUCT_PACKAGES += \
     LenovoParts
 
+# Dolby (stock DAX effects, open settings app)
+PRODUCT_PACKAGES += \
+    LenovoDolby
+
 # Sensors
 PRODUCT_PACKAGES += \
     android.hardware.sensors@2.0-service.multihal \
