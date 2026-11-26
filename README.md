@@ -18,6 +18,7 @@ Target: `lineage_tb9707f`, LineageOS 24.0.
 <manifest>
   <remote name="nioctris" fetch="https://github.com/Nioctris" />
   <project path="device/lenovo/tb9707f" name="android_device_lenovo_tb9707f" remote="nioctris" revision="lineage-24.0" />
+  <project path="vendor/lenovo/tb9707f" name="proprietary_vendor_lenovo_tb9707f" remote="nioctris" revision="lineage-24.0" />
   <project path="kernel/lenovo/sm8250" name="android_kernel_lenovo_sm8250" remote="nioctris" revision="lineage-24.0-tb9707f" />
 </manifest>
 ```
@@ -26,12 +27,19 @@ The kernel is a fork of
 [Sparxikle/android_kernel_lenovo_sm8250](https://github.com/Sparxikle/android_kernel_lenovo_sm8250)
 (`vendor/kona-perf_defconfig` + `vendor/lenovo/tb9707f.config`, Clang r450784d).
 
-Proprietary files go to `vendor/lenovo/tb9707f`: run `./extract-files.py`
-against a stock ZUI 15.0.342 dump.
+Proprietary files come from
+[proprietary_vendor_lenovo_tb9707f](https://github.com/Nioctris/proprietary_vendor_lenovo_tb9707f)
+(ZUI 15.0.342). Some Dolby blobs there are not stock, see its README before
+running `extract-files.py`.
 
 ## Build
 
+A few LineageOS projects need local fixes (missing includes, `vendor_available`
+for libraries the stock blobs link against, recovery on the split DSI panel,
+a framework NPE). Apply them once after `repo sync`:
+
 ```bash
+device/lenovo/tb9707f/patches/apply.sh
 source build/envsetup.sh
 lunch lineage_tb9707f trunk_staging userdebug
 m bacon
@@ -70,6 +78,9 @@ Known issues:
   (`androidboot.init_fatal_panic`, reboot to recovery on panic).
 
 ## Tools
+
+`patches/build_soong.patch` only limits soong's memory use (GOMEMLIMIT
+22 GiB); skip it on hosts with plenty of RAM.
 
 `tools/ram-test/` holds the early kernel bring-up tools (U-Boot RAM boot with
 a diagnostic initramfs). The Lineage build does not use them.

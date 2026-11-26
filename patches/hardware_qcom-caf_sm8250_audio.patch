@@ -1,0 +1,51 @@
+diff --git a/hal/audio_extn/battery_listener.cpp b/hal/audio_extn/battery_listener.cpp
+index 14be797d3..d963930fa 100644
+--- a/hal/audio_extn/battery_listener.cpp
++++ b/hal/audio_extn/battery_listener.cpp
+@@ -37,6 +37,7 @@
+ #include <healthhalutils/HealthHalUtils.h>
+ #include <hidl/HidlTransportSupport.h>
+ #include <thread>
++#include <mutex>
+ #include "battery_listener.h"
+ 
+ using android::hardware::interfacesEqual;
+diff --git a/hal/audio_hw.h b/hal/audio_hw.h
+index 0374b48ca..c6eaddccd 100644
+--- a/hal/audio_hw.h
++++ b/hal/audio_hw.h
+@@ -251,7 +251,7 @@ enum {
+     AUDIO_USECASE_MAX
+ };
+ 
+-const char * const use_case_table[AUDIO_USECASE_MAX];
++extern const char * const use_case_table[AUDIO_USECASE_MAX];
+ 
+ #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+ 
+diff --git a/hal/msm8974/platform.c b/hal/msm8974/platform.c
+index 6ebd6c299..c15102d3a 100644
+--- a/hal/msm8974/platform.c
++++ b/hal/msm8974/platform.c
+@@ -240,7 +240,7 @@ enum {
+ };
+ 
+ #define PLATFORM_CONFIG_KEY_OPERATOR_INFO "operator_info"
+-char vendor_config_path[VENDOR_CONFIG_PATH_MAX_LENGTH];
++static char vendor_config_path[VENDOR_CONFIG_PATH_MAX_LENGTH];
+ char xml_file_path[VENDOR_CONFIG_FILE_MAX_LENGTH];
+ 
+ struct operator_info {
+diff --git a/hal/platform_info.c b/hal/platform_info.c
+index 5c7579191..93c359bd9 100644
+--- a/hal/platform_info.c
++++ b/hal/platform_info.c
+@@ -51,7 +51,7 @@
+ #endif
+ 
+ #define BUF_SIZE                    1024
+-char vendor_config_path[VENDOR_CONFIG_PATH_MAX_LENGTH];
++static char vendor_config_path[VENDOR_CONFIG_PATH_MAX_LENGTH];
+ char platform_info_xml_path_file[VENDOR_CONFIG_FILE_MAX_LENGTH];
+ 
+ typedef enum {

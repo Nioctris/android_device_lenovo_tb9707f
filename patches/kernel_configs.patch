@@ -1,0 +1,15 @@
+diff --git a/t/android-4.19/android-base-conditional.xml b/t/android-4.19/android-base-conditional.xml
+index fafe2d2..fc0ca26 100644
+--- a/t/android-4.19/android-base-conditional.xml
++++ b/t/android-4.19/android-base-conditional.xml
+@@ -43,10 +43,6 @@
+ 		<key>CONFIG_ARMV8_DEPRECATED</key>
+ 		<value type="bool">y</value>
+ 	</config>
+-	<config>
+-		<key>CONFIG_CFI_CLANG</key>
+-		<value type="bool">y</value>
+-	</config>
+ 	<config>
+ 		<key>CONFIG_COMPAT</key>
+ 		<value type="bool">y</value>

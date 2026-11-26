@@ -1,0 +1,12 @@
+diff --git a/aidl/VibratorSelector/VibratorSelector.cpp b/aidl/VibratorSelector/VibratorSelector.cpp
+index e1f8a4b..745ac1e 100644
+--- a/aidl/VibratorSelector/VibratorSelector.cpp
++++ b/aidl/VibratorSelector/VibratorSelector.cpp
+@@ -33,6 +33,7 @@
+  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include <memory>
+ #include <errno.h>
+ #include <log/log.h>
+ #include <string>

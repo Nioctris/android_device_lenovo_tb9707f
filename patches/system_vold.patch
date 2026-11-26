@@ -1,0 +1,13 @@
+diff --git a/model/PublicVolume.cpp b/model/PublicVolume.cpp
+index bf7aaa6..8d5ab1e 100644
+--- a/model/PublicVolume.cpp
++++ b/model/PublicVolume.cpp
+@@ -31,6 +31,8 @@
+ #include <android-base/stringprintf.h>
+ #include <cutils/fs.h>
+ #include <private/android_filesystem_config.h>
++
++#include <algorithm>
+ #include <utils/Timers.h>
+ 
+ #include <fcntl.h>

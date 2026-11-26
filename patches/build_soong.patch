@@ -1,0 +1,14 @@
+diff --git a/ui/build/soong.go b/ui/build/soong.go
+index 4521b4abe..ba6177651 100644
+--- a/ui/build/soong.go
++++ b/ui/build/soong.go
+@@ -215,6 +215,9 @@ func (pb PrimaryBuilderFactory) primaryBuilderInvocation(config Config) bootstra
+ 
+ 	commonArgs = append(commonArgs, "-l", filepath.Join(pb.config.FileListDir(), "Android.bp.list"))
+ 	invocationEnv := make(map[string]string)
++	invocationEnv["GOGC"] = "50"
++	invocationEnv["GOMEMLIMIT"] = "22GiB"
++	invocationEnv["GOMAXPROCS"] = "8"
+ 	if pb.debugPort != "" {
+ 		//debug mode
+ 		commonArgs = append(commonArgs, "--delve_listen", pb.debugPort,

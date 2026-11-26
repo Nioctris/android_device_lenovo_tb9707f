@@ -1,0 +1,17 @@
+diff --git a/services/core/java/com/android/server/notification/NotificationAttentionHelper.java b/services/core/java/com/android/server/notification/NotificationAttentionHelper.java
+index f5756a2d8706..713961b88ce2 100644
+--- a/services/core/java/com/android/server/notification/NotificationAttentionHelper.java
++++ b/services/core/java/com/android/server/notification/NotificationAttentionHelper.java
+@@ -1075,6 +1075,12 @@ public final class NotificationAttentionHelper {
+     }
+ 
+     void updateLightsLocked() {
++        // LineageNotificationLights calls back into this method from its
++        // constructor, before mLineageNotificationLights is assigned.
++        if (mLineageNotificationLights == null) {
++            return;
++        }
++
+         // handle notification lights
+         NotificationRecord ledNotification = null;
+         while (ledNotification == null && !mLights.isEmpty()) {
