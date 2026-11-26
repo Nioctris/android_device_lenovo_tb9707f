@@ -11,9 +11,10 @@ on post-fs-data
     chown system system /sys/class/backlight/ktz8866-backlight/brightness
     chmod 0664 /sys/class/backlight/ktz8866-backlight/brightness
 
-    # Lineage health charging control toggles input suspend on the PMIC charger.
-    chown system system /sys/class/power_supply/battery/input_suspend
-    chmod 0664 /sys/class/power_supply/battery/input_suspend
+    # Lineage health charging control stops battery charging with the input
+    # kept up, so the charger powers the device (bypass).
+    chown system system /sys/class/power_supply/battery/battery_charging_enabled
+    chmod 0664 /sys/class/power_supply/battery/battery_charging_enabled
 
 on boot
     # The KTZ8866 is the only panel backlight; the stock ABL leaves a low
