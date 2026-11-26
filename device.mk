@@ -209,14 +209,12 @@ TARGET_SUPPORTS_OMX_SERVICE := false
 
 # Overlays
 PRODUCT_PACKAGES += \
-    CarrierConfigOverlayCommon \
     FrameworkResOverlayCommon \
     LineageSDKOverlayCommon \
     LineageSettingsOverlayCommon \
     SettingsOverlayCommon \
     SettingsProviderOverlayCommon \
     SystemUIOverlayCommon \
-    TelephonyOverlayCommon \
     WifiResourcesOverlayCommon
 
 PRODUCT_ENFORCE_RRO_TARGETS := *
