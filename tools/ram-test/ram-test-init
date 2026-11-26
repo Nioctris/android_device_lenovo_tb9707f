@@ -1,0 +1,166 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+export PATH=/bin
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mount -t configfs configfs /config
+
+report()
+{
+	echo '=== Y700 RAM boot ==='
+	uname -r
+	echo '=== Block devices ==='
+	cat /proc/partitions
+	echo '=== Input devices ==='
+	cat /proc/bus/input/devices
+	echo '=== DRM connectors ==='
+	for status in /sys/class/drm/card*-*/status; do
+		[ -r "$status" ] || continue
+		echo "$status"
+		cat "$status"
+	done
+	echo '=== Backlight ==='
+	for attribute in /sys/class/backlight/*/actual_brightness; do
+		[ -r "$attribute" ] || continue
+		echo "$attribute"
+		cat "$attribute"
+	done
+	echo '=== Kernel log ==='
+	dmesg
+	echo '=== End of report (Enter repeats) ==='
+}
+
+sample_input()
+{
+	local entry event name pid readers='' found=''
+	echo 'Touch and pen sampling for ten seconds. Move a finger or the pen now.'
+	for entry in /sys/class/input/event*; do
+		[ -r "$entry/device/name" ] || continue
+		name=$(cat "$entry/device/name")
+		case "$name" in
+			NVTCapacitiveTouchScreen|NVTCapacitivePen)
+				event=${entry##*/}
+				echo "$event: $name"
+				timeout 10 cat "/dev/input/$event" > "/run/$event" &
+				readers="$readers $!"
+				found="$found $event"
+				;;
+		esac
+	done
+	if [ -z "$found" ]; then
+		echo 'No Novatek input devices'
+		return
+	fi
+	for pid in $readers; do wait "$pid"; done
+	for event in $found; do
+		echo "$event: $(wc -c < "/run/$event") input bytes"
+	done
+	echo '=== End of input sample ==='
+}
+
+run_modetest()
+{
+	timeout 24 /drm-test/ld-linux-aarch64.so.1 --library-path /drm-test \
+		/drm-test/modetest -M msm_drm "$@"
+}
+
+display_diagnostics()
+{
+	local action=$1 reset=${2:-}
+	if [ ! -x /drm-test/ld-linux-aarch64.so.1 ]; then
+		echo 'Display test tools are missing'
+	elif [ ! -d /sys/class/drm/card0-DSI-1 ]; then
+		echo 'DSI-1 is unavailable'
+	elif [ "$action" = modes ]; then
+		run_modetest -c
+	else
+		if [ "$reset" = reset ]; then
+			echo 'Applying and releasing a framebuffer to turn off inherited scanout'
+			sleep 1 | run_modetest -s "DSI-1:#$action@XR24" -F smpte,smpte
+			sleep 1
+		fi
+		echo "Applying DSI-1 mode index $action with color bars for twenty seconds"
+		# Keep modetest's stdin open while it is holding DRM master.
+		sleep 20 | run_modetest -s "DSI-1:#$action@XR24" -F smpte,smpte
+		echo "DRM test exit: $?"
+	fi
+	echo '=== End of display test ==='
+}
+
+test_split_display()
+{
+	local action crtc left right extra
+	read -r action crtc left right extra <<EOF
+$1
+EOF
+	case "$crtc:$left:$right:$extra" in
+		*[!0-9:]*|:*|*::*|*:*:*:?*) echo 'Expected display-split CRTC LEFT RIGHT' ;;
+		*)
+			sleep 20 | run_modetest -a -s "DSI-1@$crtc:#0@XR24" \
+				-P "$left@$crtc:800x2560+0+0@XR24" \
+				-P "$right@$crtc:800x2560+800+0@XR24" -F smpte,smpte
+			echo "DRM split test exit: $?"
+			;;
+	esac
+	echo '=== End of display test ==='
+}
+
+start_acm()
+{
+	local node udc count=0
+	while [ "$count" -lt 30 ]; do
+		for node in /sys/class/udc/*a600000*; do
+			[ -e "$node" ] && break
+		done
+		if [ -e "$node" ]; then
+			udc=${node##*/}
+			break
+		fi
+		sleep 1
+		count=$((count + 1))
+	done
+	[ -n "$udc" ] || return 1
+
+	mkdir /config/usb_gadget/ram-test &&
+		cd /config/usb_gadget/ram-test &&
+		echo 0x1d6b > idVendor &&
+		echo 0x0104 > idProduct &&
+		mkdir -p strings/0x409 functions/acm.GS0 configs/c.1 &&
+		echo 'Y700 RAM diagnostics' > strings/0x409/product &&
+		ln -s functions/acm.GS0 configs/c.1/ &&
+		echo "$udc" > UDC
+}
+
+echo "y700 ram-test: init reached" > /dev/kmsg
+if start_acm; then
+	while true; do
+		# Reopen the port after every disconnect.
+		{
+			echo 'Y700 RAM diagnostics. Enter: report. input: sample touch and pen. modes: list display modes. display 0/1: draw a test pattern. display-reset: cycle the display then test. reboot: return to the default boot entry.'
+			while IFS= read -r line; do
+				case "$line" in
+					'') report ;;
+					input) sample_input ;;
+					modes) display_diagnostics modes ;;
+					planes) run_modetest -p; echo '=== End of display test ===' ;;
+					'display-split '*) test_split_display "$line" ;;
+					display|'display 0') display_diagnostics 0 ;;
+					'display 1') display_diagnostics 1 ;;
+					display-reset) display_diagnostics 0 reset ;;
+					reboot)
+						echo 'Rebooting to the default boot entry'
+						reboot -f
+						echo 'Reboot command returned'
+						;;
+					*) echo 'Enter: report. input: sample touch and pen. modes: list display modes. display 0/1: draw a test pattern. display-reset: cycle the display then test. reboot: return to the default boot entry.' ;;
+				esac
+			done
+		} </dev/ttyGS0 >/dev/ttyGS0 2>&1
+		sleep 1
+	done
+fi
+
+echo "y700 ram-test: USB ACM unavailable" > /dev/kmsg
+while true; do sleep 60; done

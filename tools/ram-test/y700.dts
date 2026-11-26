@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+/plugin/;
+
+/* Apply after the ZUI TB-9707F overlay on the Lineage Kona v2.1 DTB. */
+&{/} {
+	model = "Lenovo Legion Y700 (TB-9707F)";
+	compatible = "lenovo,tb9707f", "qcom,kona-mtp", "qcom,kona", "qcom,mtp";
+};
+
+&{/memory} {
+	/* Preserve the DDR type supplied by the stock ABL for GPU bus votes. */
+	ddr_device_type = <8>;
+};
+
+&qupv3_se5_i2c {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	y700_backlight: KTZ8866@11 {
+		compatible = "lenovo,tb9707f-ktz8866";
+		reg = <0x11>;
+		enable-gpios = <&tlmm 62 0>;
+
+		y700_lcd_bias: lcd-bias {
+			regulator-name = "lcd-bias";
+		};
+	};
+};
+
+&soc {
+	y700_panel_supplies: dsi_panel_pwr_supply_tb9707f {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		/*
+		 * libfdt prepends new child nodes when applying an overlay.
+		 * The resulting FDT must power vddio, vdd, then the LCD bias.
+		 */
+		qcom,panel-supply-entry@2 {
+			reg = <2>;
+			qcom,supply-name = "lcd-bias";
+			qcom,supply-min-voltage = <0>;
+			qcom,supply-max-voltage = <0>;
+			qcom,supply-enable-load = <0>;
+			qcom,supply-disable-load = <0>;
+			qcom,supply-post-on-sleep = <20>;
+		};
+
+		qcom,panel-supply-entry@1 {
+			reg = <1>;
+			qcom,supply-name = "vdd";
+			qcom,supply-min-voltage = <3300000>;
+			qcom,supply-max-voltage = <3300000>;
+			qcom,supply-enable-load = <856000>;
+			qcom,supply-disable-load = <0>;
+		};
+
+		qcom,panel-supply-entry@0 {
+			reg = <0>;
+			qcom,supply-name = "vddio";
+			qcom,supply-min-voltage = <1850000>;
+			qcom,supply-max-voltage = <1850000>;
+			qcom,supply-enable-load = <62000>;
+			qcom,supply-disable-load = <80>;
+			qcom,supply-post-on-sleep = <20>;
+		};
+	};
+};
+
+&sde_dsi {
+	backlight = <&y700_backlight>;
+	lcd-bias-supply = <&y700_lcd_bias>;
+};
+
+&dsi_nt36523_panel_vid {
+	qcom,panel-supply-entries = <&y700_panel_supplies>;
+};
+
+&{/soc/spi@880000/novatek@0} {
+	firmware-name = "novatek_ts_fw.bin";
+	novatek,mp-name = "novatek_ts_mp.bin";
+};
+
+&pm8150b_charger {
+	status = "disabled";
+};
+
+&pm8150b_pdphy {
+	status = "disabled";
+};
+
+&pm8150b_fg {
+	status = "disabled";
+};
+
+&smb1396 {
+	status = "disabled";
+};
+
+&smb1396_div2_cp_master {
+	/* The CAF binding uses a different name for the stock 1 A minimum. */
+	qcom,div2-cp-min-ilim-ua = <1000000>;
+};
+
+&smb1396_slave {
+	status = "disabled";
+};
+
+/* Keep a USB gadget for bring-up while the SMB5 and PD stack is disabled. */
+&{/soc/ssusb@a600000/dwc3@a600000} {
+	dr_mode = "peripheral";
+};
+
+&mdss_mdp {
+	/* The SDE component master waits for every connector in this list. */
+	connectors = <&sde_wb &sde_dsi &sde_rscc>;
+};
+
+&sde_dsi1 {
+	status = "disabled";
+};
+
+&sde_dp {
+	status = "disabled";
+};
+
+&cs35l45_1 {
+	sound-name-prefix = "SPK1";
+};
+
+&cs35l45_2 {
+	sound-name-prefix = "SPK2";
+};
+
+&kona_snd {
+	qcom,codec-max-aux-devs = <3>;
+	qcom,codec-aux-devs = <&wcd938x_codec &cs35l45_1 &cs35l45_2>;
+	qcom,ext-disp-audio-rx = <0>;
+};

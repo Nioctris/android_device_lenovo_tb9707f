@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+/plugin/;
+
+/ {
+	model = "Lenovo Legion Y700 (TB-9707F)";
+	compatible = "lenovo,tb9707f", "qcom,kona";
+	qcom,board-id = <0x02010008 0>;
+};
+
+/* The board DTB already carries the platform overlay. */
+&soc {
+	lenovo,abl-dtbo-placeholder;
+};
