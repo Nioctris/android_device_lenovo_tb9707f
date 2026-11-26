@@ -72,8 +72,6 @@ Known issues:
 
 - Pen pressure/axis scale for WGP pens is not calibrated yet.
 - Headset button thresholds need calibration.
-- The kernel command line still carries debug options
-  (`androidboot.init_fatal_panic`, reboot to recovery on panic).
 
 ## Tools
 
