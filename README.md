@@ -60,7 +60,7 @@ Working:
 
 - Display 60/120 Hz and adaptive refresh, brightness and auto-brightness,
   LiveDisplay picture adjustment
-- Touch (stock 2022 Novatek firmware), pen input
+- Touch and pen
 - Wi-Fi, Bluetooth, sensors (SSC: accelerometer, gyro, compass, light,
   proximity), dual haptic motors
 - Speakers (CS35L45), built-in microphones, 3.5 mm headphones, Dolby Atmos

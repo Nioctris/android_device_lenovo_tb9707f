@@ -6,10 +6,6 @@
 
 DEVICE_PATH := device/lenovo/tb9707f
 
-# The Y700 is a kona tablet with a boot header v2 and no vendor_boot/init_boot.
-TARGET_IS_TABLET := true
-TARGET_IS_VAB := false
-
 # A/B
 AB_OTA_UPDATER := true
 
