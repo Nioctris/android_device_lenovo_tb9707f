@@ -3,32 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:title="@string/charging_title">
 
-    <PreferenceCategory
-        android:key="live"
-        android:title="@string/power_live_title">
-
-        <Preference
-            android:key="power_status"
-            android:selectable="false" />
-
-        <org.lineageos.lenovoparts.charging.PowerGraphPreference
-            android:key="power_graph" />
-
-        <Preference
-            android:key="power_charger"
-            android:title="@string/power_charger_title"
-            android:selectable="false" />
-
-        <Preference
-            android:key="power_battery"
-            android:title="@string/power_battery_title"
-            android:selectable="false" />
-
-        <Preference
-            android:key="power_pump"
-            android:title="@string/power_pump_title"
-            android:selectable="false" />
-    </PreferenceCategory>
+    <org.lineageos.lenovoparts.charging.PowerDashboardPreference
+        android:key="power_dashboard" />
 
     <PreferenceCategory
         android:key="controls"
@@ -53,21 +29,6 @@
             app:seekBarIncrement="5"
             app:showSeekBarValue="false"
             app:updatesContinuously="false" />
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:key="battery"
-        android:title="@string/power_health_title">
-
-        <Preference
-            android:key="battery_capacity"
-            android:title="@string/power_capacity_title"
-            android:selectable="false" />
-
-        <Preference
-            android:key="battery_health"
-            android:title="@string/power_health_state_title"
-            android:selectable="false" />
     </PreferenceCategory>
 
     <Preference

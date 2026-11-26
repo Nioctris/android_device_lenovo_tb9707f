@@ -35,13 +35,7 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
     private SwitchPreferenceCompat mFast;
     private SeekBarPreference mPower;
 
-    private Preference mStatus;
-    private PowerGraphPreference mGraph;
-    private Preference mCharger;
-    private Preference mBattery;
-    private Preference mPump;
-    private Preference mCapacity;
-    private Preference mHealth;
+    private PowerDashboardPreference mDashboard;
 
     private final Runnable mRefresh = new Runnable() {
         @Override
@@ -66,13 +60,7 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         mFast.setOnPreferenceChangeListener(this);
         mPower.setOnPreferenceChangeListener(this);
 
-        mStatus = findPreference("power_status");
-        mGraph = findPreference("power_graph");
-        mCharger = findPreference("power_charger");
-        mBattery = findPreference("power_battery");
-        mPump = findPreference("power_pump");
-        mCapacity = findPreference("battery_capacity");
-        mHealth = findPreference("battery_health");
+        mDashboard = findPreference("power_dashboard");
     }
 
     @Override
@@ -103,34 +91,42 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
             return;
         }
         PowerGraphView.add((float) s.batteryWatts());
-        mGraph.refresh();
+        mDashboard.refreshGraph();
 
-        mStatus.setTitle(getString(R.string.power_status_format, statusText(s), s.capacity));
-        mStatus.setSummary(modeText(s));
-
+        String mode = modeText(s);
+        mDashboard.setCard(PowerDashboardPreference.CARD_STATUS, s.capacity + "%",
+                mode != null ? statusText(s) + " · " + mode : statusText(s));
+        mDashboard.setCard(PowerDashboardPreference.CARD_POWER, signedWatts(s.batteryWatts()),
+                getString(R.string.power_card_power_detail, amps(s.batteryUa),
+                        volts(s.batteryUv)));
         if (s.usbPresent) {
-            mCharger.setSummary(getString(R.string.power_charger_format, chargerType(s),
-                    volts(s.vbusUv), watts(s.inputWatts())));
+            mDashboard.setCard(PowerDashboardPreference.CARD_CHARGER, chargerType(s),
+                    volts(s.vbusUv) + " · " + watts(s.inputWatts()));
         } else {
-            mCharger.setSummary(R.string.power_charger_none);
+            mDashboard.setCard(PowerDashboardPreference.CARD_CHARGER,
+                    getString(R.string.power_charger_none), null);
         }
-        mBattery.setSummary(getString(R.string.power_battery_format, amps(s.batteryUa),
-                volts(s.batteryUv), watts(s.batteryWatts()), celsius(s.batteryTemp)));
         if (s.pumpEnabled) {
-            mPump.setSummary(getString(R.string.power_pump_on_format,
-                    amps(s.pumpInputUa()), celsius(s.pumpTemp)));
+            mDashboard.setCard(PowerDashboardPreference.CARD_PUMPS,
+                    getString(R.string.power_pump_on),
+                    getString(R.string.power_pump_on_detail, amps(s.pumpInputUa()),
+                            celsius(s.pumpTemp)));
         } else {
-            mPump.setSummary(R.string.power_pump_off);
+            mDashboard.setCard(PowerDashboardPreference.CARD_PUMPS,
+                    getString(R.string.power_pump_off), null);
         }
-
+        mDashboard.setCard(PowerDashboardPreference.CARD_TEMP, celsius(s.batteryTemp),
+                s.health);
         if (PowerStats.valid(s.chargeFullUah) && s.chargeDesignUah > 0) {
-            mCapacity.setSummary(getString(R.string.power_capacity_format,
-                    s.chargeFullUah / 1000, s.chargeDesignUah / 1000,
-                    (int) Math.round(100.0 * s.chargeFullUah / s.chargeDesignUah), s.cycles));
+            mDashboard.setCard(PowerDashboardPreference.CARD_CAPACITY,
+                    Math.round(100.0 * s.chargeFullUah / s.chargeDesignUah) + "%",
+                    getString(R.string.power_capacity_detail, s.chargeFullUah / 1000,
+                            s.chargeDesignUah / 1000, s.cycles));
         }
-        if (s.health != null) {
-            mHealth.setSummary(s.health);
-        }
+    }
+
+    private static String signedWatts(double w) {
+        return String.format(Locale.getDefault(), "%+.1f W", w);
     }
 
     private String statusText(PowerStats s) {
@@ -151,7 +147,7 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
 
     private String modeText(PowerStats s) {
         if (!s.usbPresent) {
-            return getString(R.string.power_mode_battery);
+            return null;
         }
         if (s.bypass) {
             return getString(R.string.power_mode_bypass);
@@ -159,7 +155,7 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         if (s.limitBypass) {
             return getString(R.string.power_mode_limit);
         }
-        return getString(R.string.power_mode_charge);
+        return null;
     }
 
     private String chargerType(PowerStats s) {
