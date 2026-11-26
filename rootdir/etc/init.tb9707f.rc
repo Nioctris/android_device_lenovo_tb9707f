@@ -20,3 +20,7 @@ on boot
     # The KTZ8866 is the only panel backlight; the stock ABL leaves a low
     # level in the chip. Use a readable level until the lights HAL takes over.
     write /sys/class/backlight/ktz8866-backlight/brightness 128
+
+on property:sys.boot_completed=1
+    # Let libperfmgr start applying power hints (boosts, profiles).
+    setprop vendor.powerhal.init 1
