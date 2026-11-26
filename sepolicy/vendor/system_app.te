@@ -3,3 +3,7 @@ hal_client_domain(system_app, hal_dms)
 
 # LenovoParts performance mode (power HAL extension)
 hal_client_domain(system_app, hal_power)
+
+# LenovoParts bypass charging (battery bypass_charging node)
+allow system_app vendor_sysfs_battery_supply:dir r_dir_perms;
+allow system_app vendor_sysfs_battery_supply:file rw_file_perms;
