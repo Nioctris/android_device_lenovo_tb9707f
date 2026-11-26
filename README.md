@@ -60,16 +60,27 @@ Working:
 
 - Display 60/120 Hz and adaptive refresh, brightness and auto-brightness,
   LiveDisplay picture adjustment
-- Touch and pen
+- Touch (stock Novatek firmware), pen input, double-tap to wake
 - Wi-Fi, Bluetooth, sensors (SSC: accelerometer, gyro, compass, light,
   proximity), dual haptic motors
 - Speakers (CS35L45), built-in microphones, 3.5 mm headphones, Dolby Atmos
-- Rear camera (photo, video), front camera preview
-- Charging, charging limit, deep sleep (~12 mA screen off with Wi-Fi)
-- Side switch (rotation lock or Do Not Disturb), LenovoParts settings
+- Rear camera (photo, video), front camera
+- Charging, charging limit, bypass charging, deep sleep
+- Side switch (rotation lock or Do Not Disturb)
+
+LenovoParts (launcher app, also in Settings and quick settings):
+
+- Power: live charger, battery and charge pump readings, battery health,
+  bypass charging, fast charging and a charging power cap
+- Performance profiles (power saving, balanced, performance) with live CPU,
+  GPU, temperature and memory readings
+- Refresh rate, side switch action
 
 Known issues:
 
+- USB-PD fast charging (PPS through the SMB1396 charge pumps) is being
+  tuned: the pumps can trip their input current limit at full current.
+- Display output over USB-C reboots the tablet.
 - Pen pressure/axis scale for WGP pens is not calibrated yet.
 - Headset button thresholds need calibration.
 
