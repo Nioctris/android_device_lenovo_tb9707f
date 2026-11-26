@@ -71,9 +71,7 @@ Working:
 Known issues:
 
 - Pen pressure/axis scale for WGP pens is not calibrated yet.
-- Front camera stills look over-processed.
 - Headset button thresholds need calibration.
-- No 90 Hz mode (not present in stock either).
 - The kernel command line still carries debug options
   (`androidboot.init_fatal_panic`, reboot to recovery on panic).
 
