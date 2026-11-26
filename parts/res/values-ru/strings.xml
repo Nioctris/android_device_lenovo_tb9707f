@@ -61,4 +61,14 @@
     <string name="power_pump_on">Работают</string>
     <string name="power_pump_on_detail">вход %1$s · %2$s</string>
     <string name="power_graph_title">Мощность батареи за 10 минут</string>
+    <string name="perf_card_silver">Энергоэффективные ядра (0–3)</string>
+    <string name="perf_card_gold">Производительные ядра (4–6)</string>
+    <string name="perf_card_prime">Главное ядро (7)</string>
+    <string name="perf_card_gpu">Графика</string>
+    <string name="perf_card_temp">Температура процессора</string>
+    <string name="perf_card_memory">Свободная память</string>
+    <string name="perf_load">загрузка %1$d%%</string>
+    <string name="perf_temp_detail">графика %1$s · корпус %2$s</string>
+    <string name="perf_memory_detail">из %1$s</string>
+    <string name="perf_zram">zram %1$s из %2$s</string>
 </resources>

@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/app_name">
 
-    <Preference
+    <org.lineageos.lenovoparts.widget.PaneItemPreference
         android:key="power"
         android:icon="@drawable/ic_bypass_charging"
         android:title="@string/charging_title"
@@ -10,9 +10,9 @@
         <intent
             android:targetPackage="org.lineageos.lenovoparts"
             android:targetClass="org.lineageos.lenovoparts.charging.ChargingActivity" />
-    </Preference>
+    </org.lineageos.lenovoparts.widget.PaneItemPreference>
 
-    <Preference
+    <org.lineageos.lenovoparts.widget.PaneItemPreference
         android:key="performance"
         android:icon="@drawable/ic_perf_profile_mid"
         android:title="@string/perf_profile_title"
@@ -20,9 +20,9 @@
         <intent
             android:targetPackage="org.lineageos.lenovoparts"
             android:targetClass="org.lineageos.lenovoparts.perf.PerfProfileActivity" />
-    </Preference>
+    </org.lineageos.lenovoparts.widget.PaneItemPreference>
 
-    <Preference
+    <org.lineageos.lenovoparts.widget.PaneItemPreference
         android:key="display"
         android:icon="@drawable/ic_display"
         android:title="@string/refresh_rate_title"
@@ -30,9 +30,9 @@
         <intent
             android:targetPackage="org.lineageos.lenovoparts"
             android:targetClass="org.lineageos.lenovoparts.display.RefreshRateActivity" />
-    </Preference>
+    </org.lineageos.lenovoparts.widget.PaneItemPreference>
 
-    <Preference
+    <org.lineageos.lenovoparts.widget.PaneItemPreference
         android:key="side_switch"
         android:icon="@drawable/ic_side_switch"
         android:title="@string/side_switch_title"
@@ -40,5 +40,5 @@
         <intent
             android:targetPackage="org.lineageos.lenovoparts"
             android:targetClass="org.lineageos.lenovoparts.sideswitch.SideSwitchActivity" />
-    </Preference>
+    </org.lineageos.lenovoparts.widget.PaneItemPreference>
 </PreferenceScreen>

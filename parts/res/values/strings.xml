@@ -61,4 +61,14 @@
     <string name="power_pump_on">Working</string>
     <string name="power_pump_on_detail">%1$s in · %2$s</string>
     <string name="power_graph_title">Battery power, last 10 minutes</string>
+    <string name="perf_card_silver">Efficiency cores (0–3)</string>
+    <string name="perf_card_gold">Performance cores (4–6)</string>
+    <string name="perf_card_prime">Prime core (7)</string>
+    <string name="perf_card_gpu">Graphics</string>
+    <string name="perf_card_temp">Processor temperature</string>
+    <string name="perf_card_memory">Free memory</string>
+    <string name="perf_load">load %1$d%%</string>
+    <string name="perf_temp_detail">graphics %1$s · body %2$s</string>
+    <string name="perf_memory_detail">of %1$s</string>
+    <string name="perf_zram">zram %1$s of %2$s</string>
 </resources>

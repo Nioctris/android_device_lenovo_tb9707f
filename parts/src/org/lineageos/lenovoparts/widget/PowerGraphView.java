@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.lineageos.lenovoparts.charging;
+package org.lineageos.lenovoparts.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -45,7 +45,7 @@ public class PowerGraphView extends View {
         mText.setTextSize(12 * dp);
     }
 
-    static void add(float watts) {
+    public static void add(float watts) {
         HISTORY[sHead] = watts;
         sHead = (sHead + 1) % SAMPLES;
         sCount = Math.min(sCount + 1, SAMPLES);

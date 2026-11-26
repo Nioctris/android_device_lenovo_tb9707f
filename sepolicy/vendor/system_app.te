@@ -10,3 +10,7 @@ allow system_app vendor_sysfs_battery_supply:dir r_dir_perms;
 allow system_app vendor_sysfs_battery_supply:file rw_file_perms;
 r_dir_file(system_app, vendor_sysfs_usb_supply)
 r_dir_file(system_app, vendor_sysfs_usbpd_device)
+
+# LenovoParts performance: GPU clock and load, thermal zones
+r_dir_file(system_app, vendor_sysfs_kgsl)
+r_dir_file(system_app, sysfs_thermal)

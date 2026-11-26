@@ -3,6 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:title="@string/perf_profile_title">
 
+    <org.lineageos.lenovoparts.widget.CardGridPreference
+        android:key="perf_dashboard" />
+
     <ListPreference
         android:key="perf_profile"
         android:title="@string/perf_profile_title"

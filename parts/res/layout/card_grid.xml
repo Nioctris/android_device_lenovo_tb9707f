@@ -15,9 +15,11 @@
         android:columnCount="2" />
 
     <LinearLayout
+        android:id="@+id/graph_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="6dp"
+        android:visibility="gone"
         android:background="@drawable/card_background"
         android:orientation="vertical"
         android:padding="16dp">
@@ -29,7 +31,7 @@
             android:textColor="@color/card_label"
             android:textSize="13sp" />
 
-        <org.lineageos.lenovoparts.charging.PowerGraphView
+        <org.lineageos.lenovoparts.widget.PowerGraphView
             android:id="@+id/power_graph"
             android:layout_width="match_parent"
             android:layout_height="180dp"

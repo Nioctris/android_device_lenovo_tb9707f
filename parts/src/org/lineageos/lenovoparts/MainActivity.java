@@ -21,6 +21,7 @@ import org.lineageos.lenovoparts.charging.ChargingFragment;
 import org.lineageos.lenovoparts.display.RefreshRateFragment;
 import org.lineageos.lenovoparts.perf.PerfProfileFragment;
 import org.lineageos.lenovoparts.sideswitch.SideSwitchFragment;
+import org.lineageos.lenovoparts.widget.PaneItemPreference;
 
 /**
  * Launcher entry: every tablet setting in one place. On a wide screen the
@@ -74,9 +75,39 @@ public class MainActivity extends CollapsingToolbarBaseActivity {
 
     public static class MainFragment extends SettingsBasePreferenceFragment {
 
+        private static final String[] KEYS = {"power", "performance", "display", "side_switch"};
+        private static final String STATE_SELECTED = "selected";
+
+        private String mSelected = "power";
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.main_settings, rootKey);
+            if (savedInstanceState != null) {
+                mSelected = savedInstanceState.getString(STATE_SELECTED, mSelected);
+            }
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            HostFragment host = (HostFragment) getParentFragment();
+            select(host != null && host.isTwoPane() ? mSelected : null);
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putString(STATE_SELECTED, mSelected);
+        }
+
+        private void select(String key) {
+            for (String k : KEYS) {
+                PaneItemPreference item = findPreference(k);
+                if (item != null) {
+                    item.setSelected(k.equals(key));
+                }
+            }
         }
 
         @Override
@@ -84,6 +115,8 @@ public class MainActivity extends CollapsingToolbarBaseActivity {
             HostFragment host = (HostFragment) getParentFragment();
             Fragment detail = detailFor(preference.getKey());
             if (host != null && host.isTwoPane() && detail != null) {
+                mSelected = preference.getKey();
+                select(mSelected);
                 host.showDetail(detail);
                 return true;
             }

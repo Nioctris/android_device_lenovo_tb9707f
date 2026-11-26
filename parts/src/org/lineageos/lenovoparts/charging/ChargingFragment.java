@@ -18,6 +18,8 @@ import androidx.preference.SwitchPreferenceCompat;
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
 import org.lineageos.lenovoparts.R;
+import org.lineageos.lenovoparts.widget.CardGridPreference;
+import org.lineageos.lenovoparts.widget.PowerGraphView;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +37,14 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
     private SwitchPreferenceCompat mFast;
     private SeekBarPreference mPower;
 
-    private PowerDashboardPreference mDashboard;
+    private static final int CARD_STATUS = 0;
+    private static final int CARD_POWER = 1;
+    private static final int CARD_CHARGER = 2;
+    private static final int CARD_PUMPS = 3;
+    private static final int CARD_TEMP = 4;
+    private static final int CARD_CAPACITY = 5;
+
+    private CardGridPreference mDashboard;
 
     private final Runnable mRefresh = new Runnable() {
         @Override
@@ -61,6 +70,10 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         mPower.setOnPreferenceChangeListener(this);
 
         mDashboard = findPreference("power_dashboard");
+        mDashboard.setCards(R.string.power_card_status, R.string.power_card_power,
+                R.string.power_card_charger, R.string.power_card_pumps,
+                R.string.power_card_temp, R.string.power_card_capacity);
+        mDashboard.setGraphVisible(true);
     }
 
     @Override
@@ -94,31 +107,31 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         mDashboard.refreshGraph();
 
         String mode = modeText(s);
-        mDashboard.setCard(PowerDashboardPreference.CARD_STATUS, s.capacity + "%",
+        mDashboard.setCard(CARD_STATUS, s.capacity + "%",
                 mode != null ? statusText(s) + " · " + mode : statusText(s));
-        mDashboard.setCard(PowerDashboardPreference.CARD_POWER, signedWatts(s.batteryWatts()),
+        mDashboard.setCard(CARD_POWER, signedWatts(s.batteryWatts()),
                 getString(R.string.power_card_power_detail, amps(s.batteryUa),
                         volts(s.batteryUv)));
         if (s.usbPresent) {
-            mDashboard.setCard(PowerDashboardPreference.CARD_CHARGER, chargerType(s),
+            mDashboard.setCard(CARD_CHARGER, chargerType(s),
                     volts(s.vbusUv) + " · " + watts(s.inputWatts()));
         } else {
-            mDashboard.setCard(PowerDashboardPreference.CARD_CHARGER,
+            mDashboard.setCard(CARD_CHARGER,
                     getString(R.string.power_charger_none), null);
         }
         if (s.pumpEnabled) {
-            mDashboard.setCard(PowerDashboardPreference.CARD_PUMPS,
+            mDashboard.setCard(CARD_PUMPS,
                     getString(R.string.power_pump_on),
                     getString(R.string.power_pump_on_detail, amps(s.pumpInputUa()),
                             celsius(s.pumpTemp)));
         } else {
-            mDashboard.setCard(PowerDashboardPreference.CARD_PUMPS,
+            mDashboard.setCard(CARD_PUMPS,
                     getString(R.string.power_pump_off), null);
         }
-        mDashboard.setCard(PowerDashboardPreference.CARD_TEMP, celsius(s.batteryTemp),
+        mDashboard.setCard(CARD_TEMP, celsius(s.batteryTemp),
                 s.health);
         if (PowerStats.valid(s.chargeFullUah) && s.chargeDesignUah > 0) {
-            mDashboard.setCard(PowerDashboardPreference.CARD_CAPACITY,
+            mDashboard.setCard(CARD_CAPACITY,
                     Math.round(100.0 * s.chargeFullUah / s.chargeDesignUah) + "%",
                     getString(R.string.power_capacity_detail, s.chargeFullUah / 1000,
                             s.chargeDesignUah / 1000, s.cycles));
