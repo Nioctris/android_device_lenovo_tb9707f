@@ -1,53 +1,75 @@
-# Lenovo Legion Y700 (TB-9707F) — LineageOS 24 device tree
+# LineageOS device tree for the Lenovo Legion Y700 2022 (TB-9707F)
 
-Target: `lineage_tb9707f` (SM8250-AC / kona, 12 GB, UFS, 8.8" 2560x1600).
+| | |
+|---|---|
+| SoC | Qualcomm SM8250-AC (Snapdragon 870, kona) |
+| RAM / storage | 12 GB / UFS 3.1 |
+| Display | 8.8" 2560x1600 120 Hz, NT36523 TDDI (dual-DSI C-PHY), KTZ8866 backlight |
+| Audio | 2x CS35L45 (CSPL), WCD938x 3.5 mm jack, Dolby Atmos |
+| Wi-Fi / BT | QCA6390 |
+| Shipped with | ZUI 15 (Android 13, vendor Android 11) |
 
-## Boot and partition model
+Target: `lineage_tb9707f`, LineageOS 24.0.
 
-- Stock ABL: boot image header **v2**, no `vendor_boot`, no `init_boot`.
-- A/B slots, A/B OTA updater. Virtual A/B is disabled for the first bring-up.
-- Dynamic partitions live in the stock 8 GiB `super`: `qti_dynamic_partitions`,
-  `system`, `system_ext`, `product`, `vendor`, `odm`.
-- Stock partition sizes: boot 96 MiB, dtbo 24 MiB, recovery 100 MiB,
-  userdata 96 GiB (current tablet layout).
-- Stock vendor is Android 11 / VNDK 30 (HIDL); system is Android 13.
-- The ABL-selected dtbo overlay is shipped as `prebuilt/dtbo.img`
-  (built from the Y700 kernel tree).
+## Sources
 
-## Kernel
+```xml
+<!-- .repo/local_manifests/tb9707f.xml -->
+<manifest>
+  <remote name="nioctris" fetch="https://github.com/Nioctris" />
+  <project path="device/lenovo/tb9707f" name="android_device_lenovo_tb9707f" remote="nioctris" revision="lineage-24.0" />
+  <project path="kernel/lenovo/sm8250" name="android_kernel_lenovo_sm8250" remote="nioctris" revision="lineage-24.0-tb9707f" />
+</manifest>
+```
 
-- Source path: `kernel/lenovo/sm8250`.
-- Config: `vendor/kona-perf_defconfig vendor/lenovo/tb9707f.config`.
-- Clang: `r450784d`.
+The kernel is a fork of
+[Sparxikle/android_kernel_lenovo_sm8250](https://github.com/Sparxikle/android_kernel_lenovo_sm8250)
+(`vendor/kona-perf_defconfig` + `vendor/lenovo/tb9707f.config`, Clang r450784d).
 
-## Vendor blobs
+Proprietary files go to `vendor/lenovo/tb9707f`: run `./extract-files.py`
+against a stock ZUI 15.0.342 dump.
 
-The blob list and extractor are in:
+## Build
 
-- `vendor/lenovo/tb9707f/proprietary-files.txt` (997 entries, 74 missing
-  from the Xiaomi kona template; see the vendor README).
-- `device/lenovo/tb9707f/extract-files.py`.
+```bash
+source build/envsetup.sh
+lunch lineage_tb9707f trunk_staging userdebug
+m bacon
+```
 
-The list is the Xiaomi `sm8250-common` kona base plus the Lenovo delta:
-Lenovo HIDL services, CS35L45 + `libcirrusspkrprot`, Novatek touch firmware,
-KTZ8866, QCA6390, Dolby, RichTap, Pandora camera plugins and the Lenovo
-audio haptic firmware. Every entry was checked against the extracted stock
-`vendor`/`odm`/`system_ext` trees.
+## Boot and partitions
 
-## Known bring-up gaps
+- Stock ABL, boot image header v2, no `vendor_boot` / `init_boot`.
+- A/B, dynamic partitions in the stock `super` (`system`, `system_ext`,
+  `product`, `vendor`, `odm`).
+- The ABL-selected dtbo is the stock ZUI one (`prebuilt/dtbo.img`).
+- The precompiled SELinux policy lives in `odm`: flash `odm` together with
+  `vendor` after sepolicy changes.
 
-- Run `extract-files.py` in the source tree to materialize the blobs; the
-  checked-in vendor tree currently only contains the list and makefile shim.
-- Vendor SELinux policy for the Lenovo HIDL services still has to be added.
-- Audio: the stock vendor mixer/audio policy files are used as-is; the
-  CS35L45 calibration/protection blobs are in the list.
-- Virtual A/B can be enabled after the first slot-A boot.
-- The stock Android graphical stack was not brought to a frame in the RAM
-  test; the kernel display path was validated separately with `modetest`
-  (full screen 1600x2560@120, two DRM planes).
+## Status
 
-## Safety
+Working:
 
-Test images only in slot A. Do not touch slot B, `xbl*`, `abl*`, `tz`,
-`hyp`, `keymaster`, `devcfg`, `aop`, `persist`, `modemst*`, `fsg`, `fsc`,
-`devinfo`, `frp`, `ddr`, `cdt`. Never use `qbootctl -s`.
+- Display 60/120 Hz and adaptive refresh, brightness and auto-brightness,
+  LiveDisplay picture adjustment
+- Touch (stock 2022 Novatek firmware), pen input
+- Wi-Fi, Bluetooth, sensors (SSC: accelerometer, gyro, compass, light,
+  proximity), dual haptic motors
+- Speakers (CS35L45), built-in microphones, 3.5 mm headphones, Dolby Atmos
+- Rear camera (photo, video), front camera preview
+- Charging, charging limit, deep sleep (~12 mA screen off with Wi-Fi)
+- Side switch (rotation lock or Do Not Disturb), LenovoParts settings
+
+Known issues:
+
+- Pen pressure/axis scale for WGP pens is not calibrated yet.
+- Front camera stills look over-processed.
+- Headset button thresholds need calibration.
+- No 90 Hz mode (not present in stock either).
+- The kernel command line still carries debug options
+  (`androidboot.init_fatal_panic`, reboot to recovery on panic).
+
+## Tools
+
+`tools/ram-test/` holds the early kernel bring-up tools (U-Boot RAM boot with
+a diagnostic initramfs). The Lineage build does not use them.
