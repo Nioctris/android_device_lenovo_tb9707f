@@ -44,9 +44,6 @@
          config to 7. -->
     <integer name="config_deviceHardwareWakeKeys">64</integer>
 
-    <!-- Whether device has screen with higher aspect ratio -->
-    <bool name="config_haveHigherAspectRatioScreen">true</bool>
-
 
     <!-- Side switch handler in LenovoParts -->
     <string-array name="config_deviceKeyHandlerLibs" translatable="false">

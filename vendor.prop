@@ -139,7 +139,6 @@ ro.surface_flinger.protected_contents=true
 ro.surface_flinger.supports_background_blur=1
 ro.surface_flinger.use_color_management=true
 ro.surface_flinger.wcg_composition_dataspace=143261696
-ro.vendor.display.sensortype=2
 vendor.display.comp_mask=0
 vendor.display.disable_excl_rect=0
 vendor.display.disable_excl_rect_partial_fb=1
@@ -229,9 +228,6 @@ vendor.usb.rndis.func.name=gsi
 vendor.usb.use_ffs_mtp=1
 vendor.usb.use_gadget_hal=1
 
-# Volume steps
-ro.config.vc_call_vol_steps=11
-
 # WiFi
 wifi.aware.interface=wifi-aware0
 
@@ -240,7 +236,6 @@ zygote.critical_window.minute=10
 
 # Lenovo Y700 display
 ro.sf.lcd_density=400
-persist.sys.screen_refresh_rate=60_90_120
 ro.surface_flinger.display_update_imminent_timeout_ms=1000
 # Drop to the lowest allowed rate after 1 s without updates
 ro.surface_flinger.set_idle_timer_ms=1000
