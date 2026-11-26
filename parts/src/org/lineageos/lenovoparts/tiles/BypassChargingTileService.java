@@ -8,7 +8,7 @@ package org.lineageos.lenovoparts.tiles;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 
-import org.lineageos.lenovoparts.bypass.BypassCharging;
+import org.lineageos.lenovoparts.charging.BypassCharging;
 
 public class BypassChargingTileService extends TileService {
 

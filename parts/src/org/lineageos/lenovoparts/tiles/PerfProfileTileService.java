@@ -5,6 +5,7 @@
 
 package org.lineageos.lenovoparts.tiles;
 
+import android.graphics.drawable.Icon;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 
@@ -46,18 +47,23 @@ public class PerfProfileTileService extends TileService {
             return;
         }
         int label;
+        int icon;
         switch (profile) {
             case PerfProfile.POWERSAVE:
                 label = R.string.perf_profile_powersave;
+                icon = R.drawable.ic_perf_profile_low;
                 break;
             case PerfProfile.PERFORMANCE:
                 label = R.string.perf_profile_performance;
+                icon = R.drawable.ic_perf_profile_high;
                 break;
             default:
                 label = R.string.perf_profile_balanced;
+                icon = R.drawable.ic_perf_profile_mid;
                 break;
         }
         tile.setSubtitle(getString(label));
+        tile.setIcon(Icon.createWithResource(this, icon));
         tile.setState(PerfProfile.BALANCED.equals(profile)
                 ? Tile.STATE_INACTIVE : Tile.STATE_ACTIVE);
         tile.updateTile();

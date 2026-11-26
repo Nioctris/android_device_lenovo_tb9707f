@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Lenovo parts</string>
+    <string name="app_name">LenovoParts</string>
     <string name="refresh_rate_title">Refresh rate</string>
     <string name="refresh_rate_fixed_title">Refresh rate</string>
     <string name="refresh_rate_adaptive_title">Adaptive refresh rate</string>
@@ -24,5 +24,44 @@
     <string name="bypass_charging_title">Bypass charging</string>
     <string name="bypass_charging_tile">Bypass charging</string>
     <string name="bypass_charging_summary">Power the tablet from the charger without charging the battery</string>
-    <string name="bypass_charging_hint">Works at any charge level, independently of the charging limit. Useful for long gaming or video sessions on the charger: the battery does not wear and heats up less. The setting stays on after a reboot.</string>
+    <string name="bypass_charging_notification_title">Bypass charging is on</string>
+    <string name="bypass_charging_notification_text">The tablet runs from the charger, the battery is not charging</string>
+    <string name="bypass_charging_notification_disable">Turn off</string>
+    <string name="charging_title">Power</string>
+    <string name="charging_summary">Charging, bypass charging and battery health</string>
+    <string name="perf_profile_menu_summary">Power saving, balanced or performance</string>
+    <string name="refresh_rate_menu_summary">60 or 120 Hz, adaptive</string>
+    <string name="side_switch_menu_summary">What the slide switch on the edge does</string>
+    <string name="power_live_title">Now</string>
+    <string name="power_status_format">%1$s · %2$d%%</string>
+    <string name="power_status_charging">Charging</string>
+    <string name="power_status_full">Full</string>
+    <string name="power_status_not_charging">Not charging</string>
+    <string name="power_status_discharging">Discharging</string>
+    <string name="power_status_unknown">Unknown</string>
+    <string name="power_mode_battery">On battery</string>
+    <string name="power_mode_charge">The battery charges from the charger</string>
+    <string name="power_mode_bypass">Bypass charging: the charger powers the tablet</string>
+    <string name="power_mode_limit">Charging limit reached: the charger powers the tablet</string>
+    <string name="power_charger_title">Charger</string>
+    <string name="power_charger_format">%1$s · %2$s · %3$s</string>
+    <string name="power_charger_none">Not connected</string>
+    <string name="power_battery_title">Battery</string>
+    <string name="power_battery_format">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="power_pump_title">Charge pumps</string>
+    <string name="power_pump_on_format">On · %1$s in · %2$s</string>
+    <string name="power_pump_off">Off</string>
+    <string name="power_controls_title">Charging</string>
+    <string name="power_health_title">Battery health</string>
+    <string name="power_capacity_title">Capacity</string>
+    <string name="power_capacity_format">%1$d of %2$d mAh (%3$d%%) · %4$d cycles</string>
+    <string name="power_health_state_title">State</string>
+    <string name="fast_charging_title">Fast charging</string>
+    <string name="fast_charging_summary">Off: charge at a standard 2 A</string>
+    <string name="charging_power_title">Maximum charging power</string>
+    <string name="charging_power_summary">%1$d W</string>
+    <string name="charging_power_warning_title">Charge above 35 W?</string>
+    <string name="charging_power_warning_text">This tablet is known to overheat and fail when charged at full power for a long time. Charge above 35 W only when you need it, and not under load.</string>
+    <string name="charging_power_warning_confirm">Allow</string>
+    <string name="charging_hint">Bypass charging works at any charge level, independently of the charging limit: the battery does not wear and heats up less during long sessions on the charger. The charging power is approximate: it caps the battery charge current, and a charger may give less.</string>
 </resources>

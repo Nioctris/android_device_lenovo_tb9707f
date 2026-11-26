@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:title="@string/charging_title">
+
+    <PreferenceCategory
+        android:key="live"
+        android:title="@string/power_live_title">
+
+        <Preference
+            android:key="power_status"
+            android:selectable="false" />
+
+        <org.lineageos.lenovoparts.charging.PowerGraphPreference
+            android:key="power_graph" />
+
+        <Preference
+            android:key="power_charger"
+            android:title="@string/power_charger_title"
+            android:selectable="false" />
+
+        <Preference
+            android:key="power_battery"
+            android:title="@string/power_battery_title"
+            android:selectable="false" />
+
+        <Preference
+            android:key="power_pump"
+            android:title="@string/power_pump_title"
+            android:selectable="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="controls"
+        android:title="@string/power_controls_title">
+
+        <SwitchPreferenceCompat
+            android:key="bypass_charging"
+            android:title="@string/bypass_charging_title"
+            android:summary="@string/bypass_charging_summary"
+            android:persistent="false" />
+
+        <SwitchPreferenceCompat
+            android:key="fast_charging"
+            android:title="@string/fast_charging_title"
+            android:summary="@string/fast_charging_summary"
+            android:persistent="false" />
+
+        <SeekBarPreference
+            android:key="charging_power"
+            android:title="@string/charging_power_title"
+            android:persistent="false"
+            app:seekBarIncrement="5"
+            app:showSeekBarValue="false"
+            app:updatesContinuously="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="battery"
+        android:title="@string/power_health_title">
+
+        <Preference
+            android:key="battery_capacity"
+            android:title="@string/power_capacity_title"
+            android:selectable="false" />
+
+        <Preference
+            android:key="battery_health"
+            android:title="@string/power_health_state_title"
+            android:selectable="false" />
+    </PreferenceCategory>
+
+    <Preference
+        android:key="charging_hint"
+        android:summary="@string/charging_hint"
+        android:selectable="false" />
+</PreferenceScreen>

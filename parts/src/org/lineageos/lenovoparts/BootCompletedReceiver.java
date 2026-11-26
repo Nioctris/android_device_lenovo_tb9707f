@@ -9,7 +9,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import org.lineageos.lenovoparts.bypass.BypassCharging;
+import org.lineageos.lenovoparts.charging.BypassCharging;
+import org.lineageos.lenovoparts.charging.ChargingPower;
 import org.lineageos.lenovoparts.perf.PerfProfile;
 
 public class BootCompletedReceiver extends BroadcastReceiver {
@@ -22,6 +23,7 @@ public class BootCompletedReceiver extends BroadcastReceiver {
         PendingResult result = goAsync();
         new Thread(() -> {
             BypassCharging.restore(context);
+            ChargingPower.restore(context);
             PerfProfile.restore(context);
             result.finish();
         }).start();

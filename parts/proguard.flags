@@ -3,3 +3,7 @@
     public <init>(android.content.Context);
     public *;
 }
+
+# Views and preferences inflated from XML
+-keep class org.lineageos.lenovoparts.charging.PowerGraphView { <init>(...); }
+-keep class org.lineageos.lenovoparts.charging.PowerGraphPreference { <init>(...); }

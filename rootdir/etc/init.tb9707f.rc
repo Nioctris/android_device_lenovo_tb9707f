@@ -19,6 +19,8 @@ on post-fs-data
     # Manual bypass charging from LenovoParts.
     chown system system /sys/class/power_supply/battery/bypass_charging
     chmod 0664 /sys/class/power_supply/battery/bypass_charging
+    chown system system /sys/class/power_supply/battery/charge_current_limit
+    chmod 0664 /sys/class/power_supply/battery/charge_current_limit
 
 on boot
     # The KTZ8866 is the only panel backlight; the stock ABL leaves a low

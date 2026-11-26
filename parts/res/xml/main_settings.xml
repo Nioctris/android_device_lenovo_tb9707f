@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/app_name">
+
+    <Preference
+        android:key="power"
+        android:icon="@drawable/ic_bypass_charging"
+        android:title="@string/charging_title"
+        android:summary="@string/charging_summary">
+        <intent
+            android:targetPackage="org.lineageos.lenovoparts"
+            android:targetClass="org.lineageos.lenovoparts.charging.ChargingActivity" />
+    </Preference>
+
+    <Preference
+        android:key="performance"
+        android:icon="@drawable/ic_perf_profile_mid"
+        android:title="@string/perf_profile_title"
+        android:summary="@string/perf_profile_menu_summary">
+        <intent
+            android:targetPackage="org.lineageos.lenovoparts"
+            android:targetClass="org.lineageos.lenovoparts.perf.PerfProfileActivity" />
+    </Preference>
+
+    <Preference
+        android:key="display"
+        android:icon="@drawable/ic_display"
+        android:title="@string/refresh_rate_title"
+        android:summary="@string/refresh_rate_menu_summary">
+        <intent
+            android:targetPackage="org.lineageos.lenovoparts"
+            android:targetClass="org.lineageos.lenovoparts.display.RefreshRateActivity" />
+    </Preference>
+
+    <Preference
+        android:key="side_switch"
+        android:icon="@drawable/ic_side_switch"
+        android:title="@string/side_switch_title"
+        android:summary="@string/side_switch_menu_summary">
+        <intent
+            android:targetPackage="org.lineageos.lenovoparts"
+            android:targetClass="org.lineageos.lenovoparts.sideswitch.SideSwitchActivity" />
+    </Preference>
+</PreferenceScreen>
