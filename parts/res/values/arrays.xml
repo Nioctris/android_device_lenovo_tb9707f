@@ -18,4 +18,14 @@
         <item>rotation_lock</item>
         <item>dnd</item>
     </string-array>
+    <string-array name="perf_profile_entries" translatable="false">
+        <item>@string/perf_profile_powersave</item>
+        <item>@string/perf_profile_balanced</item>
+        <item>@string/perf_profile_performance</item>
+    </string-array>
+    <string-array name="perf_profile_values" translatable="false">
+        <item>powersave</item>
+        <item>balanced</item>
+        <item>performance</item>
+    </string-array>
 </resources>

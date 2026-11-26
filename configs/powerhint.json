@@ -951,6 +951,54 @@
       "Node": "DoubleTapToWake",
       "Duration": 0,
       "Value": "1"
+    },
+    {
+      "PowerHint": "PROFILE_POWERSAVE",
+      "Node": "CPULittleClusterMaxFreq",
+      "Duration": 0,
+      "Value": "1516800"
+    },
+    {
+      "PowerHint": "PROFILE_POWERSAVE",
+      "Node": "CPUBigClusterMaxFreq",
+      "Duration": 0,
+      "Value": "1766400"
+    },
+    {
+      "PowerHint": "PROFILE_POWERSAVE",
+      "Node": "CPUBigPlusClusterMaxFreq",
+      "Duration": 0,
+      "Value": "1862400"
+    },
+    {
+      "PowerHint": "PROFILE_POWERSAVE",
+      "Node": "GPUMaxFreq",
+      "Duration": 0,
+      "Value": "1"
+    },
+    {
+      "PowerHint": "PROFILE_PERFORMANCE",
+      "Node": "CPULittleClusterMinFreq",
+      "Duration": 0,
+      "Value": "1075200"
+    },
+    {
+      "PowerHint": "PROFILE_PERFORMANCE",
+      "Node": "CPUBigClusterMinFreq",
+      "Duration": 0,
+      "Value": "1286400"
+    },
+    {
+      "PowerHint": "PROFILE_PERFORMANCE",
+      "Node": "CPUBigPlusClusterMinFreq",
+      "Duration": 0,
+      "Value": "1190400"
+    },
+    {
+      "PowerHint": "PROFILE_PERFORMANCE",
+      "Node": "GPUMinFreq",
+      "Duration": 0,
+      "Value": "4"
     }
   ]
 }

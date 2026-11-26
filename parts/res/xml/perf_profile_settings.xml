@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:title="@string/perf_profile_title">
+
+    <ListPreference
+        android:key="perf_profile"
+        android:title="@string/perf_profile_title"
+        android:entries="@array/perf_profile_entries"
+        android:entryValues="@array/perf_profile_values"
+        android:persistent="false"
+        app:useSimpleSummaryProvider="true" />
+
+    <Preference
+        android:key="perf_profile_hint"
+        android:summary="@string/perf_profile_hint"
+        android:selectable="false" />
+</PreferenceScreen>

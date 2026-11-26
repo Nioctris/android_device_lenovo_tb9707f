@@ -15,4 +15,9 @@
     <string name="side_switch_rotation_lock">Блокировка поворота экрана</string>
     <string name="side_switch_dnd">Не беспокоить</string>
     <string name="side_switch_hint">Действие включено, пока переключатель во включённом положении, и выключено в другом.</string>
+    <string name="perf_profile_title">Режим производительности</string>
+    <string name="perf_profile_powersave">Энергосбережение</string>
+    <string name="perf_profile_balanced">Баланс</string>
+    <string name="perf_profile_performance">Производительность</string>
+    <string name="perf_profile_hint">Энергосбережение ограничивает частоты процессора и графики. Производительность держит их выше даже без нагрузки: игры плавнее, но больше расход батареи и нагрев.</string>
 </resources>

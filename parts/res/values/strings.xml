@@ -15,4 +15,9 @@
     <string name="side_switch_rotation_lock">Lock screen rotation</string>
     <string name="side_switch_dnd">Do not disturb</string>
     <string name="side_switch_hint">The action is on while the switch is in the on position, and off in the other one.</string>
+    <string name="perf_profile_title">Performance mode</string>
+    <string name="perf_profile_powersave">Power saving</string>
+    <string name="perf_profile_balanced">Balanced</string>
+    <string name="perf_profile_performance">Performance</string>
+    <string name="perf_profile_hint">Power saving caps the CPU and GPU clocks. Performance keeps them higher at idle, for smoother games at the cost of battery and heat.</string>
 </resources>
