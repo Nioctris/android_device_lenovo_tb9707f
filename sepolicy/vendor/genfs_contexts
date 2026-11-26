@@ -6,3 +6,6 @@ genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0035/884000.i2c:qcom,smb
 
 # BQ27541 battery gauge (health, cycles, full capacity)
 genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0055/power_supply/bq27541-0 u:object_r:vendor_sysfs_battery_supply:s0
+
+# Novatek touch double-tap wake switch
+genfscon proc /gesture_control u:object_r:proc_touchpanel:s0

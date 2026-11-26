@@ -1,0 +1,2 @@
+# Double-tap wake (DOUBLE_TAP_TO_WAKE hint in powerhint.json)
+allow hal_power_default proc_touchpanel:file rw_file_perms;
