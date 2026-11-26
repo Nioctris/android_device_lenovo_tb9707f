@@ -1,0 +1,8 @@
+# SMB1396 charge pumps (the stock policy has them on i2c-2, they are on i2c-4 here)
+genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0034/884000.i2c:qcom,smb1396@34:qcom,div2_cp/power_supply/charge_pump_master u:object_r:vendor_sysfs_battery_supply:s0
+genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0034/884000.i2c:qcom,smb1396@34:qcom,div2_cp/power_supply/charge_pump_master/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0035/884000.i2c:qcom,smb1396@35:qcom,div2_cp_slave/power_supply/cp_slave u:object_r:vendor_sysfs_battery_supply:s0
+genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0035/884000.i2c:qcom,smb1396@35:qcom,div2_cp_slave/power_supply/cp_slave/wakeup u:object_r:sysfs_wakeup:s0
+
+# BQ27541 battery gauge (health, cycles, full capacity)
+genfscon sysfs /devices/platform/soc/884000.i2c/i2c-4/4-0055/power_supply/bq27541-0 u:object_r:vendor_sysfs_battery_supply:s0
