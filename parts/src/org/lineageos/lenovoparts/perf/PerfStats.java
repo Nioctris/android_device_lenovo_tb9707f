@@ -6,8 +6,6 @@
 package org.lineageos.lenovoparts.perf;
 
 import android.content.Context;
-import android.os.CpuUsageInfo;
-import android.os.HardwarePropertiesManager;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,12 +32,10 @@ final class PerfStats {
 
     /** Previous per-core usage, to turn the cumulative counters into a load. */
     static final class Sampler {
-        private final HardwarePropertiesManager mHpm;
         private long[] mActive;
         private long[] mTotal;
 
         Sampler(Context context) {
-            mHpm = context.getSystemService(HardwarePropertiesManager.class);
         }
 
         PerfStats read() {
@@ -71,38 +67,51 @@ final class PerfStats {
             return s;
         }
 
+        /*
+         * Per-core load from the cpuidle residency: the time a core was not in
+         * any idle state over the sampling interval. The Thermal HAL has no
+         * CPU usage on AIDL, and apps may not read /proc/stat.
+         */
         private void readLoad(PerfStats s) {
-            CpuUsageInfo[] usages;
-            try {
-                usages = mHpm != null ? mHpm.getCpuUsages() : null;
-            } catch (SecurityException e) {
-                usages = null;
-            }
-            if (usages == null || usages.length < 8) {
-                return;
-            }
-            long[] active = new long[usages.length];
-            long[] total = new long[usages.length];
-            for (int i = 0; i < usages.length; i++) {
-                if (usages[i] != null) {
-                    active[i] = usages[i].getActive();
-                    total[i] = usages[i].getTotal();
+            int cpus = 8;
+            long now = android.os.SystemClock.elapsedRealtimeNanos() / 1000;
+            long[] idle = new long[cpus];
+            boolean[] online = new boolean[cpus];
+            for (int cpu = 0; cpu < cpus; cpu++) {
+                String dir = "/sys/devices/system/cpu/cpu" + cpu;
+                // cpu0 has no online node. core_ctl isolates (parks) idle
+                // cores; their idle counters stop as well.
+                online[cpu] = num(dir + "/online") != 0 && num(dir + "/isolate") != 1;
+                String base = "/sys/devices/system/cpu/cpu" + cpu + "/cpuidle/state";
+                long sum = 0;
+                for (int state = 0; state < 8; state++) {
+                    long t = num(base + state + "/time");
+                    if (t == Long.MIN_VALUE) {
+                        break;
+                    }
+                    sum += t;
                 }
+                idle[cpu] = sum;
             }
             if (mActive != null) {
+                long wall = now - mTotal[0];
                 for (int c = 0; c < CLUSTERS.length; c++) {
-                    long da = 0, dt = 0;
+                    long busy = 0;
                     for (int cpu : CLUSTERS[c]) {
-                        da += active[cpu] - mActive[cpu];
-                        dt += total[cpu] - mTotal[cpu];
+                        if (!online[cpu]) {
+                            continue; // an offline or isolated core is idle
+                        }
+                        long di = idle[cpu] - mActive[cpu];
+                        busy += Math.max(0, wall - Math.min(wall, di));
                     }
-                    if (dt > 0) {
-                        s.clusters[c].loadPercent = (int) Math.min(100, Math.round(100.0 * da / dt));
+                    if (wall > 0) {
+                        s.clusters[c].loadPercent = (int) Math.min(100,
+                                Math.round(100.0 * busy / (wall * CLUSTERS[c].length)));
                     }
                 }
             }
-            mActive = active;
-            mTotal = total;
+            mActive = idle;
+            mTotal = new long[] {now};
         }
     }
 

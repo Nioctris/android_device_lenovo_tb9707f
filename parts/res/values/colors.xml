@@ -8,4 +8,5 @@
     <color name="graph_cpu">#FF0277BD</color>
     <color name="graph_gpu">#FFE65100</color>
     <color name="graph_ram">#FF2E7D32</color>
+    <color name="graph_power">#FF00897B</color>
 </resources>

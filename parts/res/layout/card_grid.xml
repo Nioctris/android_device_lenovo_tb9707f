@@ -55,49 +55,22 @@
             android:textColor="@color/card_label"
             android:textSize="13sp" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/load_legend_cpu"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawableStart="@drawable/legend_cpu"
-                android:drawablePadding="6dp"
-                android:text="@string/load_cpu"
-                android:textColor="@color/card_label"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/load_legend_gpu"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:drawableStart="@drawable/legend_gpu"
-                android:drawablePadding="6dp"
-                android:text="@string/load_gpu"
-                android:textColor="@color/card_label"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/load_legend_ram"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:drawableStart="@drawable/legend_ram"
-                android:drawablePadding="6dp"
-                android:text="@string/load_ram"
-                android:textColor="@color/card_label"
-                android:textSize="13sp" />
-        </LinearLayout>
+        <org.lineageos.lenovoparts.widget.LoadGraphView
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_marginTop="12dp"
+            android:tag="cpu" />
 
         <org.lineageos.lenovoparts.widget.LoadGraphView
-            android:id="@+id/load_graph"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_marginTop="8dp" />
+            android:layout_height="96dp"
+            android:layout_marginTop="16dp"
+            android:tag="gpu" />
+
+        <org.lineageos.lenovoparts.widget.LoadGraphView
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_marginTop="16dp"
+            android:tag="ram" />
     </LinearLayout>
 </LinearLayout>

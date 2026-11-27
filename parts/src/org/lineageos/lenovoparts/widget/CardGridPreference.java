@@ -9,6 +9,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.TextView;
 
@@ -29,7 +30,7 @@ public class CardGridPreference extends Preference {
     private boolean mGraphVisible;
     private PowerGraphView mGraph;
     private boolean mLoadGraphVisible;
-    private LoadGraphView mLoadGraph;
+    private ViewGroup mLoadCard;
 
     public CardGridPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -61,7 +62,7 @@ public class CardGridPreference extends Preference {
         mGraph = (PowerGraphView) holder.findViewById(R.id.power_graph);
         holder.findViewById(R.id.load_card)
                 .setVisibility(mLoadGraphVisible ? View.VISIBLE : View.GONE);
-        mLoadGraph = (LoadGraphView) holder.findViewById(R.id.load_graph);
+        mLoadCard = (ViewGroup) holder.findViewById(R.id.load_card);
 
         if (mCards == null || grid.getChildCount() != mLabels.length) {
             grid.removeAllViews();
@@ -131,8 +132,10 @@ public class CardGridPreference extends Preference {
     }
 
     public void refreshGraph() {
-        if (mLoadGraph != null) {
-            mLoadGraph.invalidate();
+        if (mLoadCard != null) {
+            for (int i = 0; i < mLoadCard.getChildCount(); i++) {
+                mLoadCard.getChildAt(i).invalidate();
+            }
         }
         if (mGraph != null) {
             mGraph.invalidate();

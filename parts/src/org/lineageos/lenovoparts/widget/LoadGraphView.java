@@ -8,14 +8,19 @@ package org.lineageos.lenovoparts.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
-import android.graphics.Path;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 
 import org.lineageos.lenovoparts.R;
 
-/** CPU, GPU and memory load in percent over the last 10 minutes. */
+/**
+ * One load metric in percent over the last 10 minutes: the name and the
+ * current value on top, a smoothed area chart below. The CPU, GPU and memory
+ * rows share one history.
+ */
 public class LoadGraphView extends View {
 
     public static final int CPU = 0;
@@ -28,32 +33,56 @@ public class LoadGraphView extends View {
     private static int sCount;
     private static int sHead;
 
-    private final Paint[] mLines = new Paint[SERIES];
-    private final Paint mAxis = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint mText = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path mPath = new Path();
+    private final GraphPainter mPainter;
+    private final Paint mGrid = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mLabel = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mValue = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mScale = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final float mDp;
+    private int mSeries = CPU;
+    private String mName = "";
+
+    private final GraphPainter.Series mData = new GraphPainter.Series() {
+        @Override
+        public int count() {
+            return sCount;
+        }
+
+        @Override
+        public float get(int i) {
+            return HISTORY[mSeries][(sHead - sCount + i + SAMPLES) % SAMPLES];
+        }
+    };
 
     public LoadGraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray a = context.obtainStyledAttributes(
-                new int[] {android.R.attr.textColorSecondary});
-        int secondary = a.getColor(0, 0xff888888);
+        mDp = getResources().getDisplayMetrics().density;
+        mPainter = new GraphPainter(mDp);
+        TypedArray a = context.obtainStyledAttributes(attrs, new int[] {android.R.attr.tag});
+        String tag = a.getString(0);
         a.recycle();
-        float dp = getResources().getDisplayMetrics().density;
-        int[] colors = {context.getColor(R.color.graph_cpu), context.getColor(R.color.graph_gpu),
-                context.getColor(R.color.graph_ram)};
-        for (int i = 0; i < SERIES; i++) {
-            mLines[i] = new Paint(Paint.ANTI_ALIAS_FLAG);
-            mLines[i].setColor(colors[i]);
-            mLines[i].setStyle(Paint.Style.STROKE);
-            mLines[i].setStrokeWidth(2 * dp);
-            mLines[i].setStrokeJoin(Paint.Join.ROUND);
+        if ("gpu".equals(tag)) {
+            mSeries = GPU;
+        } else if ("ram".equals(tag)) {
+            mSeries = RAM;
         }
-        mAxis.setColor(secondary);
-        mAxis.setStrokeWidth(dp);
-        mAxis.setAlpha(64);
-        mText.setColor(secondary);
-        mText.setTextSize(12 * dp);
+        int[] colors = {R.color.graph_cpu, R.color.graph_gpu, R.color.graph_ram};
+        int[] names = {R.string.load_cpu, R.string.load_gpu, R.string.load_ram};
+        mPainter.setColor(context.getColor(colors[mSeries]));
+        mName = context.getString(names[mSeries]);
+
+        int label = context.getColor(R.color.card_label);
+        mGrid.setColor(GraphPainter.withAlpha(label, 0x40));
+        mGrid.setStrokeWidth(mDp);
+        mGrid.setPathEffect(new DashPathEffect(new float[] {4 * mDp, 4 * mDp}, 0));
+        mLabel.setColor(label);
+        mLabel.setTextSize(13 * mDp);
+        mValue.setColor(context.getColor(R.color.card_value));
+        mValue.setTextSize(20 * mDp);
+        mValue.setTypeface(Typeface.create(Typeface.DEFAULT, 500, false));
+        mValue.setTextAlign(Paint.Align.RIGHT);
+        mScale.setColor(GraphPainter.withAlpha(label, 0xb0));
+        mScale.setTextSize(10 * mDp);
     }
 
     /** Adds one sample; a negative value means unknown and repeats the last one. */
@@ -73,34 +102,20 @@ public class LoadGraphView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         int w = getWidth(), h = getHeight();
-        float pad = mText.getTextSize() * 1.4f;
-        float top = pad, bottom = h - pad;
+        float header = mValue.getTextSize() * 1.25f;
+        canvas.drawText(mName, 0, header * 0.72f, mLabel);
+        String value = sCount > 0 ? Math.round(mData.get(sCount - 1)) + "%" : "—";
+        canvas.drawText(value, w, header * 0.78f, mValue);
+
+        float top = header + 6 * mDp, bottom = h - mDp;
+        float scaleWidth = mScale.measureText("100%") + 6 * mDp;
+        float right = w - scaleWidth;
         for (int pct = 0; pct <= 100; pct += 50) {
             float y = bottom - pct / 100f * (bottom - top);
-            canvas.drawLine(0, y, w, y, mAxis);
+            canvas.drawLine(0, y, right, y, mGrid);
+            canvas.drawText(pct + "%", right + 6 * mDp, y + mScale.getTextSize() * 0.35f,
+                    mScale);
         }
-        canvas.drawText("100%", 0, top - mText.getTextSize() * 0.3f, mText);
-        canvas.drawText("−10 min", 0, h - mText.getTextSize() * 0.2f, mText);
-        if (sCount < 2) {
-            return;
-        }
-        float step = (float) w / (SAMPLES - 1);
-        for (int s = SERIES - 1; s >= 0; s--) {
-            mPath.reset();
-            for (int i = 0; i < sCount; i++) {
-                float x = w - (sCount - 1 - i) * step;
-                float y = bottom - sample(s, i) / 100f * (bottom - top);
-                if (i == 0) {
-                    mPath.moveTo(x, y);
-                } else {
-                    mPath.lineTo(x, y);
-                }
-            }
-            canvas.drawPath(mPath, mLines[s]);
-        }
-    }
-
-    private static float sample(int series, int i) {
-        return HISTORY[series][(sHead - sCount + i + SAMPLES) % SAMPLES];
+        mPainter.draw(canvas, mData, SAMPLES, 0, right, top, bottom, 0, 100, 0);
     }
 }
