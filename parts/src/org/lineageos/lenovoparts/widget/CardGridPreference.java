@@ -177,9 +177,12 @@ public class CardGridPreference extends Preference {
         if (mCards == null || card >= mCards.length || mCards[card] == null) {
             return;
         }
-        ((TextView) mCards[card].findViewById(R.id.card_value)).setText(mText[card][0]);
+        ((TextView) mCards[card].findViewById(R.id.card_value))
+                .setText(mText[card][0] != null ? mText[card][0] : "—");
         TextView detail = mCards[card].findViewById(R.id.card_detail);
         detail.setText(mText[card][1]);
-        detail.setVisibility(mText[card][1] == null ? View.GONE : View.VISIBLE);
+        // Keep the line even when empty, so the cards do not jump in height
+        // when the first readings arrive.
+        detail.setVisibility(mText[card][1] == null ? View.INVISIBLE : View.VISIBLE);
     }
 }

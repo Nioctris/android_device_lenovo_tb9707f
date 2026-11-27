@@ -9,10 +9,8 @@
         android:key="bt_codec_category"
         android:title="@string/bt_codec_category">
 
-        <ListPreference
-            android:key="bt_codec"
-            android:title="@string/bt_codec_title"
-            android:persistent="false" />
+        <org.lineageos.lenovoparts.widget.CodecListPreference
+            android:key="bt_codec_list" />
 
         <ListPreference
             android:key="ldac_quality"
@@ -22,13 +20,6 @@
             android:persistent="false" />
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:key="bt_peer_category"
-        android:title="@string/bt_peer_codecs_title">
-
-        <org.lineageos.lenovoparts.widget.CardGridPreference
-            android:key="bt_peer_cards" />
-    </PreferenceCategory>
 
     <PreferenceCategory
         android:key="bt_sbc_category"

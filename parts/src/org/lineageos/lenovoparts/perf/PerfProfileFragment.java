@@ -66,9 +66,11 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
     @Override
     public void onViewCreated(android.view.View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // The live readings change every second: no item change animation,
-        // which also kept waking the scroll bar.
+        // The live readings change every second. Each change relayouts the
+        // list, which reports a zero scroll and wakes the scroll bar: hide it,
+        // and skip the item change animation.
         getListView().setItemAnimator(null);
+        getListView().setVerticalScrollBarEnabled(false);
     }
 
     @Override

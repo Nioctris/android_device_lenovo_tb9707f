@@ -119,5 +119,8 @@
     <string name="bt_codec_category">Кодек</string>
     <string name="bt_sbc_category">SBC</string>
     <string name="bt_battery">Заряд %1$d%%</string>
-    <string name="bt_peer_sbc_xq">XQ %1$s</string>
+    <string name="bt_codec_auto_detail">Лучший кодек, который поддерживают оба устройства</string>
+    <string name="bt_rate_up_to">до %1$d кбит/с</string>
+    <string name="bt_rate_sbc">до %1$d кбит/с
+XQ до %2$d кбит/с</string>
 </resources>

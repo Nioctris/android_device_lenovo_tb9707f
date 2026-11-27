@@ -119,5 +119,8 @@
     <string name="bt_codec_category">Codec</string>
     <string name="bt_sbc_category">SBC</string>
     <string name="bt_battery">Battery %1$d%%</string>
-    <string name="bt_peer_sbc_xq">XQ %1$s</string>
+    <string name="bt_codec_auto_detail">The best codec supported by both devices</string>
+    <string name="bt_rate_up_to">up to %1$d kbps</string>
+    <string name="bt_rate_sbc">up to %1$d kbps
+XQ up to %2$d kbps</string>
 </resources>
