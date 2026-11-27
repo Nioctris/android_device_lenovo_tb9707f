@@ -67,6 +67,7 @@
     <string name="perf_card_gpu">Графика</string>
     <string name="perf_card_temp">Температура процессора</string>
     <string name="perf_card_memory">Свободная память</string>
+    <string name="perf_gpu_idle">Простой</string>
     <string name="perf_load">загрузка %1$d%%</string>
     <string name="perf_temp_detail">графика %1$s · корпус %2$s</string>
     <string name="perf_memory_detail">из %1$s</string>

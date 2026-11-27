@@ -96,7 +96,8 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
             mDashboard.setCard(i, ghz(c.curKhz * 1000),
                     load != null ? load + " · " + range : range);
         }
-        mDashboard.setCard(CARD_GPU, mhz(s.gpuHz), s.gpuBusy >= 0
+        mDashboard.setCard(CARD_GPU,
+                s.gpuHz > 0 ? mhz(s.gpuHz) : getString(R.string.perf_gpu_idle), s.gpuBusy >= 0
                 ? getString(R.string.perf_load, s.gpuBusy) + " · " + mhz(s.gpuMaxHz)
                 : mhz(s.gpuMaxHz));
         mDashboard.setCard(CARD_TEMP, celsius(s.cpuTemp),

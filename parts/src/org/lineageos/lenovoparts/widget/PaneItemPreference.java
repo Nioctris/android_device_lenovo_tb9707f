@@ -6,6 +6,7 @@
 package org.lineageos.lenovoparts.widget;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 
 import androidx.preference.Preference;
@@ -32,7 +33,10 @@ public class PaneItemPreference extends Preference {
     @Override
     public void onBindViewHolder(PreferenceViewHolder holder) {
         super.onBindViewHolder(holder);
-        holder.itemView.setForeground(mSelected
-                ? getContext().getDrawable(R.drawable.pane_item_selected) : null);
+        // Tint the entry's own rounded background, so the highlight keeps its
+        // shape and margins and the title stays readable.
+        holder.itemView.setBackgroundTintList(mSelected
+                ? ColorStateList.valueOf(getContext().getColor(R.color.pane_selected))
+                : null);
     }
 }
