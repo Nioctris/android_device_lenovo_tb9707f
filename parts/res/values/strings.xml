@@ -19,7 +19,7 @@
     <string name="perf_profile_powersave">Power saving</string>
     <string name="perf_profile_balanced">Balanced</string>
     <string name="perf_profile_performance">Performance</string>
-    <string name="perf_profile_hint">Power saving caps the CPU and GPU clocks. Performance keeps them higher at idle, for smoother games at the cost of battery and heat.</string>
+    <string name="perf_profile_hint">Power saving limits the CPU and GPU frequencies. Performance keeps the frequencies higher, which improves smoothness in games but increases power consumption and heat.</string>
     <string name="perf_profile_tile">Performance</string>
     <string name="bypass_charging_title">Bypass charging</string>
     <string name="bypass_charging_tile">Bypass charging</string>

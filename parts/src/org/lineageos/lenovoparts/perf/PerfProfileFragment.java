@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
 import org.lineageos.lenovoparts.R;
 import org.lineageos.lenovoparts.widget.CardGridPreference;
+import org.lineageos.lenovoparts.widget.SegmentedPreference;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -32,7 +32,7 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService mReader = Executors.newSingleThreadExecutor();
 
-    private ListPreference mProfile;
+    private SegmentedPreference mProfile;
     private CardGridPreference mDashboard;
     private PerfStats.Sampler mSampler;
 
@@ -51,6 +51,8 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.perf_profile_settings, rootKey);
         mProfile = findPreference("perf_profile");
+        mProfile.setIcons(R.drawable.ic_perf_profile_low, R.drawable.ic_perf_profile_mid,
+                R.drawable.ic_perf_profile_high);
         mProfile.setOnPreferenceChangeListener(this);
         mDashboard = findPreference("perf_dashboard");
         mDashboard.setCards(R.string.perf_card_silver, R.string.perf_card_gold,

@@ -6,13 +6,12 @@
     <org.lineageos.lenovoparts.widget.CardGridPreference
         android:key="perf_dashboard" />
 
-    <ListPreference
+    <org.lineageos.lenovoparts.widget.SegmentedPreference
         android:key="perf_profile"
         android:title="@string/perf_profile_title"
         android:entries="@array/perf_profile_entries"
         android:entryValues="@array/perf_profile_values"
-        android:persistent="false"
-        app:useSimpleSummaryProvider="true" />
+        android:persistent="false" />
 
     <Preference
         android:key="perf_profile_hint"
