@@ -4,7 +4,7 @@
     <string name="refresh_rate_title">Частота обновления</string>
     <string name="refresh_rate_fixed_title">Частота обновления</string>
     <string name="refresh_rate_adaptive_title">Адаптивная частота</string>
-    <string name="refresh_rate_adaptive_summary">Снижать до 60 Гц, когда изображение не меняется</string>
+    <string name="refresh_rate_adaptive_summary">Снижать частоту до 30 Гц, когда изображение не меняется</string>
     <string name="refresh_rate_adaptive_disabled">Доступно только при 120 Гц</string>
     <string name="refresh_rate_60">60 Гц</string>
     <string name="refresh_rate_120">120 Гц</string>

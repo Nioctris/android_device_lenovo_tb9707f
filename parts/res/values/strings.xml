@@ -4,7 +4,7 @@
     <string name="refresh_rate_title">Refresh rate</string>
     <string name="refresh_rate_fixed_title">Refresh rate</string>
     <string name="refresh_rate_adaptive_title">Adaptive refresh rate</string>
-    <string name="refresh_rate_adaptive_summary">Drop to 60 Hz when the screen content is still</string>
+    <string name="refresh_rate_adaptive_summary">Lower the rate to 30 Hz when the image does not change</string>
     <string name="refresh_rate_adaptive_disabled">Only available at 120 Hz</string>
     <string name="refresh_rate_60">60 Hz</string>
     <string name="refresh_rate_120">120 Hz</string>

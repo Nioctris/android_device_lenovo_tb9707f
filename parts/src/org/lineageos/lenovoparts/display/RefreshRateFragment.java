@@ -31,6 +31,8 @@ public class RefreshRateFragment extends SettingsBasePreferenceFragment
     private static final String PEAK_REFRESH_RATE = "peak_refresh_rate";
     private static final float LOW = 60f;
     private static final float HIGH = 120f;
+    /* Lowest rate the panel's touch controller has a scan table for. */
+    private static final float IDLE = 30f;
 
     private ListPreference mRate;
     private SwitchPreferenceCompat mAdaptive;
@@ -77,7 +79,7 @@ public class RefreshRateFragment extends SettingsBasePreferenceFragment
     private void apply(boolean high, boolean adaptive) {
         ContentResolver cr = getContext().getContentResolver();
         float peak = high ? HIGH : LOW;
-        float min = high && !adaptive ? HIGH : LOW;
+        float min = !high ? LOW : adaptive ? IDLE : HIGH;
         Settings.System.putFloat(cr, MIN_REFRESH_RATE, min);
         Settings.System.putFloat(cr, PEAK_REFRESH_RATE, peak);
     }
