@@ -7,6 +7,8 @@
     package="org.lineageos.lenovoparts"
     android:sharedUserId="android.uid.system">
 
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
     <uses-permission android:name="android.permission.DEVICE_POWER" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -37,6 +39,22 @@
             <meta-data
                 android:name="com.android.settings.category"
                 android:value="com.android.settings.category.ia.display" />
+        </activity>
+
+        <activity
+            android:name=".audio.BluetoothAudioActivity"
+            android:exported="true"
+            android:label="@string/bt_audio_title">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="com.android.settings.category"
+                android:value="com.android.settings.category.ia.connect" />
+            <meta-data
+                android:name="com.android.settings.summary"
+                android:resource="@string/bt_audio_summary" />
         </activity>
 
         <activity

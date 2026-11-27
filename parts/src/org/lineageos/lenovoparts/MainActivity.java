@@ -17,6 +17,7 @@ import androidx.preference.Preference;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
+import org.lineageos.lenovoparts.audio.BluetoothAudioFragment;
 import org.lineageos.lenovoparts.charging.ChargingFragment;
 import org.lineageos.lenovoparts.display.RefreshRateFragment;
 import org.lineageos.lenovoparts.perf.PerfProfileFragment;
@@ -75,7 +76,8 @@ public class MainActivity extends CollapsingToolbarBaseActivity {
 
     public static class MainFragment extends SettingsBasePreferenceFragment {
 
-        private static final String[] KEYS = {"power", "performance", "display", "side_switch"};
+        private static final String[] KEYS = {"power", "performance", "display", "bluetooth_audio",
+                "side_switch"};
         private static final String STATE_SELECTED = "selected";
 
         private String mSelected = "power";
@@ -136,6 +138,8 @@ public class MainActivity extends CollapsingToolbarBaseActivity {
                     return new PerfProfileFragment();
                 case "display":
                     return new RefreshRateFragment();
+                case "bluetooth_audio":
+                    return new BluetoothAudioFragment();
                 case "side_switch":
                     return new SideSwitchFragment();
                 default:

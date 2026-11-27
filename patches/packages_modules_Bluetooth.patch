@@ -1,0 +1,303 @@
+diff --git a/system/audio_hal_interface/aidl/a2dp/a2dp_encoding_aidl.cc b/system/audio_hal_interface/aidl/a2dp/a2dp_encoding_aidl.cc
+index 08389c191a..6cab8fdde2 100644
+--- a/system/audio_hal_interface/aidl/a2dp/a2dp_encoding_aidl.cc
++++ b/system/audio_hal_interface/aidl/a2dp/a2dp_encoding_aidl.cc
+@@ -20,6 +20,7 @@
+ #include <bluetooth/log.h>
+ #include <com_android_bluetooth_flags.h>
+ 
++#include <string>
+ #include <vector>
+ 
+ #include "a2dp_aidl_transport.h"
+@@ -28,6 +29,7 @@
+ #include "audio_aidl_interfaces.h"
+ #include "client_interface_aidl.h"
+ #include "codec_status_aidl.h"
++#include "osi/include/properties.h"
+ 
+ namespace bluetooth {
+ namespace audio {
+@@ -196,6 +198,13 @@ void cleanup() {
+ }
+ 
+ // Set up the codec into BluetoothAudio HAL
++// Publishes the active A2DP datapath and bitrate for the device settings
++// (bluetooth.a2dp.encoding: offload or software, bluetooth.a2dp.bitrate: bps).
++static void publish_stream_info(bool offload, const ahal_codec_configuration& config) {
++  osi_property_set("bluetooth.a2dp.encoding", offload ? "offload" : "software");
++  osi_property_set("bluetooth.a2dp.bitrate", std::to_string(config.codec_bitrate).c_str());
++}
++
+ bool setup_codec(const ahal_codec_configuration& config) {
+   if (!is_hal_enabled()) {
+     log::error("BluetoothAudio HAL is not enabled");
+@@ -239,6 +248,7 @@ bool setup_codec(const ahal_codec_configuration& config) {
+       active_hal_interface = offloading_hal_interface;
+     }
+ 
++    publish_stream_info(true, config);
+     return active_hal_interface->UpdateAudioConfig(AudioConfiguration(a2dp_stream_configuration));
+   }
+ 
+@@ -257,6 +267,7 @@ bool setup_codec(const ahal_codec_configuration& config) {
+     }
+ 
+     audio_config.set<AudioConfiguration::a2dpConfig>(codec_config);
++    publish_stream_info(true, config);
+     return active_hal_interface->UpdateAudioConfig(audio_config);
+   }
+ 
+@@ -269,6 +280,7 @@ bool setup_codec(const ahal_codec_configuration& config) {
+       active_hal_interface = software_hal_interface;
+     }
+     audio_config.set<AudioConfiguration::pcmConfig>(pcm_config);
++    publish_stream_info(false, config);
+     return active_hal_interface->UpdateAudioConfig(audio_config);
+   }
+ 
+diff --git a/system/stack/a2dp/a2dp_sbc.cc b/system/stack/a2dp/a2dp_sbc.cc
+index 9c841acdea..7265f64ff2 100644
+--- a/system/stack/a2dp/a2dp_sbc.cc
++++ b/system/stack/a2dp/a2dp_sbc.cc
+@@ -40,6 +40,7 @@
+ #include "gd/common/utils.h"
+ #include "hardware/bt_av.h"
+ #include "internal_include/bt_trace.h"
++#include "osi/include/properties.h"
+ #include "stack/include/a2dp_api.h"
+ #include "stack/include/a2dp_codec_api.h"
+ #include "stack/include/a2dp_constants.h"
+@@ -65,10 +66,12 @@ typedef struct {
+   btav_a2dp_codec_bits_per_sample_t bits_per_sample;
+ } tA2DP_SBC_CIE;
+ 
+-/* SBC Source codec capabilities */
++/* SBC Source codec capabilities. Dual channel is only preferred when SBC XQ
++ * is enabled (see a2dp_sbc_xq_enabled()); joint stereo stays the default. */
+ static const tA2DP_SBC_CIE a2dp_sbc_source_caps = {
+-        (A2DP_SBC_IE_SAMP_FREQ_44),                         /* samp_freq */
+-        (A2DP_SBC_IE_CH_MD_MONO | A2DP_SBC_IE_CH_MD_JOINT), /* ch_mode */
++        (A2DP_SBC_IE_SAMP_FREQ_44), /* samp_freq */
++        (A2DP_SBC_IE_CH_MD_MONO | A2DP_SBC_IE_CH_MD_JOINT |
++         A2DP_SBC_IE_CH_MD_DUAL), /* ch_mode */
+         (A2DP_SBC_IE_BLOCKS_16 | A2DP_SBC_IE_BLOCKS_12 | A2DP_SBC_IE_BLOCKS_8 |
+          A2DP_SBC_IE_BLOCKS_4),            /* block_len */
+         A2DP_SBC_IE_SUBBAND_8,             /* num_subbands */
+@@ -927,6 +930,29 @@ static bool select_audio_bits_per_sample(const btav_a2dp_codec_config_t* p_codec
+   return false;
+ }
+ 
++bool a2dp_sbc_xq_enabled() {
++  return osi_property_get_bool("persist.bluetooth.sbc_xq", false);
++}
++
++// Picks the stereo channel mode from |ch_mode|: dual channel first with SBC
++// XQ (the bitrate can then go well above joint stereo at bitpool 53), joint
++// stereo first otherwise. Returns 0 if no stereo mode is available.
++static uint8_t a2dp_sbc_pick_stereo_mode(uint8_t ch_mode) {
++  if (a2dp_sbc_xq_enabled() && (ch_mode & A2DP_SBC_IE_CH_MD_DUAL)) {
++    return A2DP_SBC_IE_CH_MD_DUAL;
++  }
++  if (ch_mode & A2DP_SBC_IE_CH_MD_JOINT) {
++    return A2DP_SBC_IE_CH_MD_JOINT;
++  }
++  if (ch_mode & A2DP_SBC_IE_CH_MD_STEREO) {
++    return A2DP_SBC_IE_CH_MD_STEREO;
++  }
++  if (ch_mode & A2DP_SBC_IE_CH_MD_DUAL) {
++    return A2DP_SBC_IE_CH_MD_DUAL;
++  }
++  return 0;
++}
++
+ //
+ // Selects the best channel mode from |ch_mode|.
+ // The result is stored in |p_result| and |p_codec_config|.
+@@ -934,18 +960,9 @@ static bool select_audio_bits_per_sample(const btav_a2dp_codec_config_t* p_codec
+ //
+ static bool select_best_channel_mode(uint8_t ch_mode, tA2DP_SBC_CIE* p_result,
+                                      btav_a2dp_codec_config_t* p_codec_config) {
+-  if (ch_mode & A2DP_SBC_IE_CH_MD_JOINT) {
+-    p_result->ch_mode = A2DP_SBC_IE_CH_MD_JOINT;
+-    p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+-    return true;
+-  }
+-  if (ch_mode & A2DP_SBC_IE_CH_MD_STEREO) {
+-    p_result->ch_mode = A2DP_SBC_IE_CH_MD_STEREO;
+-    p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+-    return true;
+-  }
+-  if (ch_mode & A2DP_SBC_IE_CH_MD_DUAL) {
+-    p_result->ch_mode = A2DP_SBC_IE_CH_MD_DUAL;
++  uint8_t stereo = a2dp_sbc_pick_stereo_mode(ch_mode);
++  if (stereo) {
++    p_result->ch_mode = stereo;
+     p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+     return true;
+   }
+@@ -974,23 +991,15 @@ static bool select_audio_channel_mode(const btav_a2dp_codec_config_t* p_codec_au
+         return true;
+       }
+       break;
+-    case BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO:
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_JOINT) {
+-        p_result->ch_mode = A2DP_SBC_IE_CH_MD_JOINT;
+-        p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+-        return true;
+-      }
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_STEREO) {
+-        p_result->ch_mode = A2DP_SBC_IE_CH_MD_STEREO;
+-        p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+-        return true;
+-      }
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_DUAL) {
+-        p_result->ch_mode = A2DP_SBC_IE_CH_MD_DUAL;
++    case BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO: {
++      uint8_t stereo = a2dp_sbc_pick_stereo_mode(ch_mode);
++      if (stereo) {
++        p_result->ch_mode = stereo;
+         p_codec_config->channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO;
+         return true;
+       }
+       break;
++    }
+     case BTAV_A2DP_CODEC_CHANNEL_MODE_NONE:
+       break;
+   }
+@@ -1160,23 +1169,14 @@ tA2DP_STATUS A2dpCodecConfigSbcBase::setCodecConfig(const uint8_t* p_peer_codec_
+         codec_config_.channel_mode = codec_user_config_.channel_mode;
+       }
+       break;
+-    case BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO:
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_JOINT) {
+-        result_config_cie.ch_mode = A2DP_SBC_IE_CH_MD_JOINT;
+-        codec_config_.channel_mode = codec_user_config_.channel_mode;
+-        break;
+-      }
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_STEREO) {
+-        result_config_cie.ch_mode = A2DP_SBC_IE_CH_MD_STEREO;
+-        codec_config_.channel_mode = codec_user_config_.channel_mode;
+-        break;
+-      }
+-      if (ch_mode & A2DP_SBC_IE_CH_MD_DUAL) {
+-        result_config_cie.ch_mode = A2DP_SBC_IE_CH_MD_DUAL;
++    case BTAV_A2DP_CODEC_CHANNEL_MODE_STEREO: {
++      uint8_t stereo = a2dp_sbc_pick_stereo_mode(ch_mode);
++      if (stereo) {
++        result_config_cie.ch_mode = stereo;
+         codec_config_.channel_mode = codec_user_config_.channel_mode;
+-        break;
+       }
+       break;
++    }
+     case BTAV_A2DP_CODEC_CHANNEL_MODE_NONE:
+       codec_config_.channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_NONE;
+       break;
+diff --git a/system/stack/a2dp/a2dp_sbc_encoder.cc b/system/stack/a2dp/a2dp_sbc_encoder.cc
+index 1e8bd880b2..5d23281b87 100644
+--- a/system/stack/a2dp/a2dp_sbc_encoder.cc
++++ b/system/stack/a2dp/a2dp_sbc_encoder.cc
+@@ -28,10 +28,12 @@
+ 
+ #include <cinttypes>
+ #include <cstdint>
++#include <string>
+ 
+ #include "common/time_util.h"
+ #include "embdrv/sbc/encoder/include/sbc_encoder.h"
+ #include "osi/include/allocator.h"
++#include "osi/include/properties.h"
+ #include "stack/include/a2dp_api.h"
+ #include "stack/include/a2dp_codec_api.h"
+ #include "stack/include/a2dp_sbc.h"
+@@ -47,6 +49,12 @@
+ 
+ /* High quality quality setting @ 44.1 khz */
+ #define A2DP_SBC_DEFAULT_BITRATE 328
++/* SBC XQ: dual channel, bitpool 47 per channel at 44.1 kHz by default. The
++ * target can be set with persist.bluetooth.sbc_xq_bitrate (kbps); the
++ * peer's maximum bitpool still caps it. */
++#define A2DP_SBC_XQ_BITRATE 552
++#define A2DP_SBC_XQ_MIN_BITRATE A2DP_SBC_DEFAULT_BITRATE
++#define A2DP_SBC_XQ_MAX_BITRATE 730
+ 
+ #define A2DP_SBC_NON_EDR_MAX_RATE 229
+ 
+@@ -117,7 +125,7 @@ static void a2dp_sbc_get_num_frame_iteration(uint8_t* num_of_iterations, uint8_t
+                                              uint64_t timestamp_us);
+ static uint16_t adjust_effective_mtu(const tA2DP_ENCODER_INIT_PEER_PARAMS& peer_params);
+ static uint8_t calculate_max_frames_per_packet(void);
+-static uint16_t a2dp_sbc_source_rate(bool is_peer_edr);
++static uint16_t a2dp_sbc_source_rate(bool is_peer_edr, int16_t channel_mode);
+ static uint32_t a2dp_sbc_frame_length(void);
+ 
+ void a2dp_sbc_encoder_init(const tA2DP_ENCODER_INIT_PEER_PARAMS* p_peer_params,
+@@ -216,7 +224,8 @@ static void a2dp_sbc_encoder_update(A2dpCodecConfig* a2dp_codec_config, bool* p_
+ 
+   // Set the initial target bit rate
+   const tA2DP_ENCODER_INIT_PEER_PARAMS& peer_params = a2dp_sbc_encoder_cb.peer_params;
+-  p_encoder_params->u16BitRate = a2dp_sbc_source_rate(peer_params.is_peer_edr);
++  p_encoder_params->u16BitRate =
++          a2dp_sbc_source_rate(peer_params.is_peer_edr, p_encoder_params->s16ChannelMode);
+ 
+   a2dp_sbc_encoder_cb.TxAaMtuSize = adjust_effective_mtu(peer_params);
+   log::info("MTU={}, peer_mtu={} min_bitpool={} max_bitpool={}", a2dp_sbc_encoder_cb.TxAaMtuSize,
+@@ -308,6 +317,20 @@ static void a2dp_sbc_encoder_update(A2dpCodecConfig* a2dp_codec_config, bool* p_
+ 
+   /* Finally update the bitpool in the encoder structure */
+   p_encoder_params->s16BitPool = s16BitPool;
++  osi_property_set("bluetooth.a2dp.sbc.bitpool", std::to_string(s16BitPool).c_str());
++  const char* mode = "stereo";
++  switch (p_encoder_params->s16ChannelMode) {
++    case SBC_MONO:
++      mode = "mono";
++      break;
++    case SBC_DUAL:
++      mode = "dual";
++      break;
++    case SBC_JOINT_STEREO:
++      mode = "joint";
++      break;
++  }
++  osi_property_set("bluetooth.a2dp.sbc.mode", mode);
+ 
+   log::info("final bit rate {}, final bit pool {}", p_encoder_params->u16BitRate,
+             p_encoder_params->s16BitPool);
+@@ -753,9 +776,20 @@ static uint8_t calculate_max_frames_per_packet(void) {
+   return result;
+ }
+ 
+-static uint16_t a2dp_sbc_source_rate(bool is_peer_edr) {
++static uint16_t a2dp_sbc_source_rate(bool is_peer_edr, int16_t channel_mode) {
+   uint16_t rate = A2DP_SBC_DEFAULT_BITRATE;
+ 
++  /* dual channel is only selected with SBC XQ */
++  if (channel_mode == SBC_DUAL && a2dp_sbc_xq_enabled()) {
++    int32_t xq = osi_property_get_int32("persist.bluetooth.sbc_xq_bitrate", A2DP_SBC_XQ_BITRATE);
++    if (xq < A2DP_SBC_XQ_MIN_BITRATE) {
++      xq = A2DP_SBC_XQ_MIN_BITRATE;
++    } else if (xq > A2DP_SBC_XQ_MAX_BITRATE) {
++      xq = A2DP_SBC_XQ_MAX_BITRATE;
++    }
++    rate = static_cast<uint16_t>(xq);
++  }
++
+   /* restrict bitrate if a2dp link is non-edr */
+   if (!is_peer_edr) {
+     rate = A2DP_SBC_NON_EDR_MAX_RATE;
+diff --git a/system/stack/include/a2dp_sbc.h b/system/stack/include/a2dp_sbc.h
+index 313148c62e..3c803b20b4 100644
+--- a/system/stack/include/a2dp_sbc.h
++++ b/system/stack/include/a2dp_sbc.h
+@@ -72,6 +72,10 @@ private:
+ // NOTE: only codecs that are implemented are considered valid.
+ // Returns true if |p_codec_info| contains information about a valid SBC codec,
+ // otherwise false.
++// Returns true if SBC XQ (dual channel, high bitrate) is enabled with the
++// persist.bluetooth.sbc_xq property.
++bool a2dp_sbc_xq_enabled();
++
+ bool A2DP_IsCodecValidSbc(const uint8_t* p_codec_info);
+ 
+ // Checks whether A2DP SBC Sink codec is supported.

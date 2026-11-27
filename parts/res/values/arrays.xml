@@ -28,4 +28,16 @@
         <item>balanced</item>
         <item>performance</item>
     </string-array>
+    <string-array name="sbc_xq_bitrate_entries" translatable="false">
+        <item>@string/sbc_xq_bitrate_452</item>
+        <item>@string/sbc_xq_bitrate_512</item>
+        <item>@string/sbc_xq_bitrate_552</item>
+        <item>@string/sbc_xq_bitrate_617</item>
+    </string-array>
+    <string-array name="sbc_xq_bitrate_values" translatable="false">
+        <item>452</item>
+        <item>512</item>
+        <item>552</item>
+        <item>617</item>
+    </string-array>
 </resources>

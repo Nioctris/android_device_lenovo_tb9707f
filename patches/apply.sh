@@ -14,9 +14,11 @@ projects=(
 	external/google-highway
 	external/skia
 	frameworks/base
+	hardware/interfaces
 	hardware/qcom-caf/sm8250/audio
 	hardware/qcom-caf/wlan
 	kernel/configs
+	packages/modules/Bluetooth
 	system/vold
 	vendor/qcom/opensource/data-ipa-cfg-mgr-legacy-um
 	vendor/qcom/opensource/display

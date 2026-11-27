@@ -76,15 +76,41 @@ public class CardGridPreference extends Preference {
                 mCards[i] = card;
             }
         }
-        grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-            float dp = v.getResources().getDisplayMetrics().density;
-            int columns = (r - l) / dp >= 560 ? 3 : 2;
-            if (grid.getColumnCount() != columns) {
-                v.post(() -> grid.setColumnCount(columns));
-            }
-        });
+        if (grid.getTag() == null) {
+            grid.setTag(Boolean.TRUE);
+            grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+                float dp = v.getResources().getDisplayMetrics().density;
+                int columns = (r - l) / dp >= 560 ? 3 : 2;
+                if (grid.getColumnCount() != columns) {
+                    v.post(() -> setColumns(grid, columns));
+                }
+            });
+        }
         for (int i = 0; i < mLabels.length; i++) {
             apply(i);
+        }
+    }
+
+    /*
+     * GridLayout rejects a smaller column count while its children still hold
+     * positions from the wider layout, so place the cards again.
+     */
+    private static void setColumns(GridLayout grid, int columns) {
+        if (grid.getColumnCount() == columns) {
+            return;
+        }
+        int count = grid.getChildCount();
+        View[] children = new View[count];
+        for (int i = 0; i < count; i++) {
+            children[i] = grid.getChildAt(i);
+        }
+        grid.removeAllViews();
+        grid.setColumnCount(columns);
+        for (View child : children) {
+            GridLayout.LayoutParams lp = (GridLayout.LayoutParams) child.getLayoutParams();
+            lp.rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+            lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            grid.addView(child, lp);
         }
     }
 

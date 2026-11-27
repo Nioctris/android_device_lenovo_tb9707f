@@ -1,0 +1,28 @@
+diff --git a/bluetooth/audio/utils/aidl_session/BluetoothAudioCodecs.cpp b/bluetooth/audio/utils/aidl_session/BluetoothAudioCodecs.cpp
+index d4e1828ae0..862f4bd444 100644
+--- a/bluetooth/audio/utils/aidl_session/BluetoothAudioCodecs.cpp
++++ b/bluetooth/audio/utils/aidl_session/BluetoothAudioCodecs.cpp
+@@ -51,7 +51,8 @@ static const PcmCapabilities kDefaultSoftwarePcmCapabilities = {
+ 
+ static const SbcCapabilities kDefaultOffloadSbcCapability = {
+         .sampleRateHz = {44100},
+-        .channelMode = {SbcChannelMode::MONO, SbcChannelMode::JOINT_STEREO},
++        .channelMode = {SbcChannelMode::MONO, SbcChannelMode::JOINT_STEREO,
++                        SbcChannelMode::DUAL},
+         .blockLength = {4, 8, 12, 16},
+         .numSubbands = {8},
+         .allocMethod = {SbcAllocMethod::ALLOC_MD_L},
+diff --git a/bluetooth/audio/utils/session/BluetoothAudioSupportedCodecsDB.cpp b/bluetooth/audio/utils/session/BluetoothAudioSupportedCodecsDB.cpp
+index 8e125fe700..45e1fb95fa 100644
+--- a/bluetooth/audio/utils/session/BluetoothAudioSupportedCodecsDB.cpp
++++ b/bluetooth/audio/utils/session/BluetoothAudioSupportedCodecsDB.cpp
+@@ -56,7 +56,8 @@ static const PcmParameters kDefaultSoftwarePcmCapabilities = {
+ static const SbcParameters kDefaultOffloadSbcCapability = {
+         .sampleRate = SampleRate::RATE_44100,
+         .channelMode =
+-                static_cast<SbcChannelMode>(SbcChannelMode::MONO | SbcChannelMode::JOINT_STEREO),
++                static_cast<SbcChannelMode>(SbcChannelMode::MONO | SbcChannelMode::JOINT_STEREO |
++                                            SbcChannelMode::DUAL),
+         .blockLength =
+                 static_cast<SbcBlockLength>(SbcBlockLength::BLOCKS_4 | SbcBlockLength::BLOCKS_8 |
+                                             SbcBlockLength::BLOCKS_12 | SbcBlockLength::BLOCKS_16),

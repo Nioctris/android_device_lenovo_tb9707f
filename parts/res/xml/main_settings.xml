@@ -33,6 +33,16 @@
     </org.lineageos.lenovoparts.widget.PaneItemPreference>
 
     <org.lineageos.lenovoparts.widget.PaneItemPreference
+        android:key="bluetooth_audio"
+        android:icon="@drawable/ic_bluetooth_audio"
+        android:title="@string/bt_audio_title"
+        android:summary="@string/bt_audio_summary">
+        <intent
+            android:targetPackage="org.lineageos.lenovoparts"
+            android:targetClass="org.lineageos.lenovoparts.audio.BluetoothAudioActivity" />
+    </org.lineageos.lenovoparts.widget.PaneItemPreference>
+
+    <org.lineageos.lenovoparts.widget.PaneItemPreference
         android:key="side_switch"
         android:icon="@drawable/ic_side_switch"
         android:title="@string/side_switch_title"
