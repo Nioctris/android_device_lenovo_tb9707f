@@ -12,13 +12,13 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.preference.Preference;
-import androidx.preference.SeekBarPreference;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
 import org.lineageos.lenovoparts.R;
 import org.lineageos.lenovoparts.widget.CardGridPreference;
+import org.lineageos.lenovoparts.widget.ChargingPowerPreference;
 import org.lineageos.lenovoparts.widget.PowerGraphView;
 
 import java.util.Locale;
@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChargingFragment extends SettingsBasePreferenceFragment
-        implements Preference.OnPreferenceChangeListener {
+        implements Preference.OnPreferenceChangeListener, ChargingPowerPreference.Listener {
 
     private static final long REFRESH_MS = 1000;
 
@@ -35,7 +35,8 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
 
     private SwitchPreferenceCompat mBypass;
     private SwitchPreferenceCompat mFast;
-    private SeekBarPreference mPower;
+    private ChargingPowerPreference mPower;
+    private SwitchPreferenceCompat mHigh;
 
     private static final int CARD_STATUS = 0;
     private static final int CARD_POWER = 1;
@@ -63,11 +64,13 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         mBypass = findPreference("bypass_charging");
         mFast = findPreference("fast_charging");
         mPower = findPreference("charging_power");
-        mPower.setMin(ChargingPower.MIN_WATTS);
-        mPower.setMax(ChargingPower.MAX_WATTS);
+        mPower.setRange(ChargingPower.MIN_WATTS, ChargingPower.MAX_WATTS,
+                ChargingPower.SAFE_WATTS);
+        mPower.setListener(this);
+        mHigh = findPreference("charging_power_high");
         mBypass.setOnPreferenceChangeListener(this);
         mFast.setOnPreferenceChangeListener(this);
-        mPower.setOnPreferenceChangeListener(this);
+        mHigh.setOnPreferenceChangeListener(this);
 
         mDashboard = findPreference("power_dashboard");
         mDashboard.setCards(R.string.power_card_status, R.string.power_card_power,
@@ -82,8 +85,7 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         ContentResolver cr = getContext().getContentResolver();
         mBypass.setChecked(BypassCharging.isEnabled(cr));
         mFast.setChecked(ChargingPower.isFastEnabled(cr));
-        setPower(ChargingPower.getWatts(cr));
-        mPower.setEnabled(mFast.isChecked());
+        updatePower();
         mHandler.post(mRefresh);
     }
 
@@ -202,37 +204,52 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
         if (preference == mBypass) {
             BypassCharging.setEnabled(getContext(), (Boolean) newValue);
         } else if (preference == mFast) {
-            boolean fast = (Boolean) newValue;
-            ChargingPower.setFastEnabled(getContext(), fast);
-            mPower.setEnabled(fast);
-        } else if (preference == mPower) {
-            int watts = (Integer) newValue;
-            int old = ChargingPower.getWatts(getContext().getContentResolver());
-            if (watts > ChargingPower.SAFE_WATTS && old <= ChargingPower.SAFE_WATTS) {
-                confirmHighPower(watts, old);
+            ChargingPower.setFastEnabled(getContext(), (Boolean) newValue);
+            mFast.setChecked((Boolean) newValue);
+            updatePower();
+        } else if (preference == mHigh) {
+            if ((Boolean) newValue) {
+                confirmHighPower();
                 return false;
             }
-            ChargingPower.setWatts(getContext(), watts);
-            setPower(watts);
+            ChargingPower.setHighAllowed(getContext(), false);
+            mHigh.setChecked(false);
+            updatePower();
         }
         return true;
     }
 
-    private void confirmHighPower(int watts, int old) {
+    @Override
+    public void onPowerCommitted(int watts) {
+        ChargingPower.setWatts(getContext(), watts);
+    }
+
+    @Override
+    public void onUnlockRequested() {
+        confirmHighPower();
+    }
+
+    private void confirmHighPower() {
         new AlertDialog.Builder(getContext())
                 .setTitle(R.string.charging_power_warning_title)
                 .setMessage(R.string.charging_power_warning_text)
                 .setPositiveButton(R.string.charging_power_warning_confirm, (d, w) -> {
-                    ChargingPower.setWatts(getContext(), watts);
-                    setPower(watts);
+                    ChargingPower.setHighAllowed(getContext(), true);
+                    mHigh.setChecked(true);
+                    updatePower();
                 })
-                .setNegativeButton(android.R.string.cancel, (d, w) -> setPower(old))
-                .setOnCancelListener(d -> setPower(old))
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 
-    private void setPower(int watts) {
-        mPower.setValue(watts);
-        mPower.setSummary(getString(R.string.charging_power_summary, watts));
+    private void updatePower() {
+        ContentResolver cr = getContext().getContentResolver();
+        boolean fast = ChargingPower.isFastEnabled(cr);
+        boolean high = ChargingPower.isHighAllowed(cr);
+        mHigh.setChecked(high);
+        mHigh.setEnabled(fast);
+        mPower.setEnabled(fast);
+        mPower.setLocked(!high);
+        mPower.setValue(ChargingPower.getWatts(cr));
     }
 }

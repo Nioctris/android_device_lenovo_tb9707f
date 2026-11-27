@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 theme for the MDC widgets inside SettingsLib screens -->
+    <style name="ThemeOverlay.LenovoParts.Material3"
+        parent="Theme.Material3.DynamicColors.DayNight" />
+</resources>

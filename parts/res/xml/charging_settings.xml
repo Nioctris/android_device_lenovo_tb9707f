@@ -22,13 +22,16 @@
             android:summary="@string/fast_charging_summary"
             android:persistent="false" />
 
-        <SeekBarPreference
+        <org.lineageos.lenovoparts.widget.ChargingPowerPreference
             android:key="charging_power"
             android:title="@string/charging_power_title"
-            android:persistent="false"
-            app:seekBarIncrement="5"
-            app:showSeekBarValue="false"
-            app:updatesContinuously="false" />
+            android:persistent="false" />
+
+        <SwitchPreferenceCompat
+            android:key="charging_power_high"
+            android:title="@string/charging_power_high_title"
+            android:summary="@string/charging_power_high_summary"
+            android:persistent="false" />
     </PreferenceCategory>
 
     <Preference

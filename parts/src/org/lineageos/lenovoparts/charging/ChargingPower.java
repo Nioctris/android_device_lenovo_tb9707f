@@ -18,6 +18,7 @@ public final class ChargingPower {
 
     public static final String SETTING_FAST = "lenovo_fast_charging";
     public static final String SETTING_WATTS = "lenovo_charging_power_w";
+    public static final String SETTING_HIGH = "lenovo_charging_power_high";
 
     public static final int MIN_WATTS = 10;
     public static final int MAX_WATTS = 45;
@@ -36,9 +37,15 @@ public final class ChargingPower {
         return Settings.System.getInt(cr, SETTING_FAST, 1) == 1;
     }
 
+    /** Whether the user allowed charging above {@link #SAFE_WATTS}. */
+    public static boolean isHighAllowed(ContentResolver cr) {
+        return Settings.System.getInt(cr, SETTING_HIGH, 0) == 1;
+    }
+
     public static int getWatts(ContentResolver cr) {
         int watts = Settings.System.getInt(cr, SETTING_WATTS, DEFAULT_WATTS);
-        return Math.max(MIN_WATTS, Math.min(MAX_WATTS, watts));
+        int max = isHighAllowed(cr) ? MAX_WATTS : SAFE_WATTS;
+        return Math.max(MIN_WATTS, Math.min(max, watts));
     }
 
     public static void setFastEnabled(Context context, boolean enabled) {
@@ -49,6 +56,16 @@ public final class ChargingPower {
     public static void setWatts(Context context, int watts) {
         Settings.System.putInt(context.getContentResolver(), SETTING_WATTS, watts);
         apply(context.getContentResolver());
+    }
+
+    /** Disallowing high power also brings the cap down to the safe level. */
+    public static void setHighAllowed(Context context, boolean allowed) {
+        ContentResolver cr = context.getContentResolver();
+        Settings.System.putInt(cr, SETTING_HIGH, allowed ? 1 : 0);
+        if (!allowed && Settings.System.getInt(cr, SETTING_WATTS, DEFAULT_WATTS) > SAFE_WATTS) {
+            Settings.System.putInt(cr, SETTING_WATTS, SAFE_WATTS);
+        }
+        apply(cr);
     }
 
     public static void restore(Context context) {
