@@ -58,7 +58,7 @@ m bacon
 
 Working:
 
-- Display 60/120 Hz and adaptive refresh, brightness and auto-brightness,
+- Display 60/120 Hz and adaptive refresh (down to 30 Hz on static content), brightness and auto-brightness,
   LiveDisplay picture adjustment
 - Touch (stock Novatek firmware), pen input, double-tap to wake
 - Wi-Fi, Bluetooth, sensors (SSC: accelerometer, gyro, compass, light,
