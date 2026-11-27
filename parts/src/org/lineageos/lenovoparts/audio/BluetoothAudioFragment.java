@@ -252,7 +252,11 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
                 getString(R.string.bt_codec_auto), getString(R.string.bt_codec_auto_detail),
                 null));
         boolean ldac = false;
-        for (BluetoothCodecConfig c : selectable) {
+        // The stack orders the list by priority, which moves the chosen codec
+        // to the top; keep a fixed order instead.
+        List<BluetoothCodecConfig> ordered = new ArrayList<>(selectable);
+        ordered.sort((a, b) -> Integer.compare(rank(a.getCodecType()), rank(b.getCodecType())));
+        for (BluetoothCodecConfig c : ordered) {
             int type = c.getCodecType();
             ldac |= type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC;
             String format = range(c.getSampleRate(), RATE_BITS, RATE_NAMES, " kHz");
@@ -364,6 +368,23 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
         }
         List<BluetoothDevice> devices = adapter.getActiveDevices(BluetoothProfile.A2DP);
         return devices.isEmpty() ? null : devices.get(0);
+    }
+
+    private static int rank(int type) {
+        switch (type) {
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC:
+                return 0;
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX_HD:
+                return 1;
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX:
+                return 2;
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_AAC:
+                return 3;
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC:
+                return 4;
+            default:
+                return 5;
+        }
     }
 
     private static String codecName(int type) {
