@@ -69,10 +69,6 @@
                 <action android:name="com.android.settings.action.IA_SETTINGS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Long press on the performance tile -->
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
-            </intent-filter>
             <meta-data
                 android:name="com.android.settings.category"
                 android:value="com.android.settings.category.ia.battery" />
@@ -86,16 +82,25 @@
                 <action android:name="com.android.settings.action.IA_SETTINGS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- Long press on the bypass charging tile -->
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
-            </intent-filter>
             <meta-data
                 android:name="com.android.settings.category"
                 android:value="com.android.settings.category.ia.battery" />
             <meta-data
                 android:name="com.android.settings.summary"
                 android:resource="@string/charging_summary" />
+        </activity>
+
+        <!-- Long press on any of our tiles. SystemUI resolves this action per
+             package, not per tile, so a single activity routes by tile. -->
+        <activity
+            android:name=".tiles.TilePreferencesActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
         </activity>
 
         <receiver
