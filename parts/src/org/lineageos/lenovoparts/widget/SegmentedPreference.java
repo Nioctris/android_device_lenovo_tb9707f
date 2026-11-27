@@ -7,7 +7,9 @@ package org.lineageos.lenovoparts.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
@@ -87,6 +89,12 @@ public class SegmentedPreference extends Preference {
                 group.check(b.getId());
             }
         }
+        group.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            if (r - l != or - ol) {
+                v.post(() -> fit(group));
+            }
+        });
+        group.post(() -> fit(group));
         group.addOnButtonCheckedListener((g, id, checked) -> {
             if (!checked) {
                 return;
@@ -102,5 +110,51 @@ public class SegmentedPreference extends Preference {
                 notifyChanged();
             }
         });
+    }
+
+    private static final float TEXT_SP = 14f;
+    private static final float MIN_TEXT_SP = 10f;
+    private static final int WIDE_PADDING_DP = 24;
+    private static final int NARROW_PADDING_DP = 8;
+
+    /**
+     * Narrow columns cannot fit an icon and a label side by side: put the
+     * icon above the label and use one smaller text size for all labels.
+     */
+    private static void fit(MaterialButtonToggleGroup group) {
+        int count = group.getChildCount();
+        if (count == 0 || group.getChildAt(0).getWidth() == 0) {
+            return;
+        }
+        MaterialButton first = (MaterialButton) group.getChildAt(0);
+        int cell = first.getWidth();
+        float density = first.getResources().getDisplayMetrics().density;
+        float scaled = first.getResources().getDisplayMetrics().scaledDensity;
+        TextPaint paint = new TextPaint(first.getPaint());
+
+        float widest = 0;
+        for (int i = 0; i < count; i++) {
+            MaterialButton b = (MaterialButton) group.getChildAt(i);
+            paint.setTextSize(TEXT_SP * scaled);
+            widest = Math.max(widest, paint.measureText(b.getText().toString()));
+        }
+        int icon = first.getIcon() != null ? first.getIconSize() + first.getIconPadding() : 0;
+        boolean narrow = widest + icon + 2 * WIDE_PADDING_DP * density > cell;
+
+        float size = TEXT_SP;
+        if (narrow) {
+            float room = cell - 2 * NARROW_PADDING_DP * density;
+            size = Math.max(MIN_TEXT_SP, Math.min(TEXT_SP, TEXT_SP * room / widest));
+            size = (float) Math.floor(size * 2) / 2;
+        }
+        int pad = Math.round((narrow ? NARROW_PADDING_DP : WIDE_PADDING_DP) * density);
+        for (int i = 0; i < count; i++) {
+            MaterialButton b = (MaterialButton) group.getChildAt(i);
+            b.setIconGravity(narrow ? MaterialButton.ICON_GRAVITY_TOP
+                    : MaterialButton.ICON_GRAVITY_TEXT_START);
+            b.setMaxLines(1);
+            b.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+            b.setPaddingRelative(pad, b.getPaddingTop(), pad, b.getPaddingBottom());
+        }
     }
 }
