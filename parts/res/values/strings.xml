@@ -110,11 +110,6 @@
     <string name="bt_peer_codecs_title">Supported by the headphones</string>
     <string name="ldac_quality_title">LDAC quality</string>
     <string name="bt_ldac_default">Default</string>
-    <string name="bt_peer_sbc_rate">up to %1$d kbps, XQ up to %2$d kbps</string>
-    <string name="bt_peer_max_rate">up to %1$d kbps</string>
-    <string name="bt_peer_ldac_rate">330/660/990 kbps</string>
-    <string name="bt_peer_aptx_rate">352/384 kbps</string>
-    <string name="bt_peer_aptx_hd_rate">529/576 kbps</string>
     <string name="bt_profile_hint">The settings above are saved for %1$s and applied each time it connects.</string>
     <string name="bt_profile_hint_none">Connect headphones to change their settings. The settings are saved for each device and applied each time it connects.</string>
     <string name="load_graph_title">Load, last 10 minutes</string>
@@ -124,4 +119,5 @@
     <string name="bt_codec_category">Codec</string>
     <string name="bt_sbc_category">SBC</string>
     <string name="bt_battery">Battery %1$d%%</string>
+    <string name="bt_peer_sbc_xq">XQ %1$s</string>
 </resources>

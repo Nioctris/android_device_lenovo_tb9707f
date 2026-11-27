@@ -80,6 +80,14 @@ public class ChargingFragment extends SettingsBasePreferenceFragment
     }
 
     @Override
+    public void onViewCreated(android.view.View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // The live readings change every second: no item change animation,
+        // which also kept waking the scroll bar.
+        getListView().setItemAnimator(null);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         ContentResolver cr = getContext().getContentResolver();

@@ -16,9 +16,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemProperties;
+import android.text.TextUtils;
 
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.settingslib.widget.SettingsBasePreferenceFragment;
@@ -55,7 +57,8 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
     private CardGridPreference mDashboard;
     private ListPreference mCodec;
     private ListPreference mLdac;
-    private Preference mPeerCodecs;
+    private CardGridPreference mPeerCards;
+    private PreferenceCategory mPeerCategory;
     private SwitchPreferenceCompat mSbcXq;
     private ListPreference mSbcXqBitrate;
     private Preference mProfileHint;
@@ -95,7 +98,8 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
                 R.string.bt_card_channels);
         mCodec = findPreference("bt_codec");
         mLdac = findPreference("ldac_quality");
-        mPeerCodecs = findPreference("bt_peer_codecs");
+        mPeerCards = findPreference("bt_peer_cards");
+        mPeerCategory = findPreference("bt_peer_category");
         mSbcXq = findPreference("sbc_xq");
         mSbcXqBitrate = findPreference("sbc_xq_bitrate");
         mProfileHint = findPreference("bt_profile_hint");
@@ -109,6 +113,14 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
         if (adapter != null) {
             adapter.getProfileProxy(getContext(), mListener, BluetoothProfile.A2DP);
         }
+    }
+
+    @Override
+    public void onViewCreated(android.view.View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // The live readings change every second: no item change animation,
+        // which also kept waking the scroll bar.
+        getListView().setItemAnimator(null);
     }
 
     @Override
@@ -221,87 +233,144 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
         mCodec.setEnabled(connected);
         mSbcXq.setEnabled(connected);
         mSbcXqBitrate.setEnabled(connected && mProfile.sbcXq);
+        mPeerCategory.setVisible(connected);
         if (!connected) {
-            mCodec.setSummary(null);
+            setSummary(mCodec, null);
             mLdac.setVisible(false);
-            mPeerCodecs.setSummary(getString(R.string.bt_not_connected));
-            mProfileHint.setSummary(R.string.bt_profile_hint_none);
+            setSummary(mProfileHint, getString(R.string.bt_profile_hint_none));
             return;
         }
         String name = mDevice.getAlias() != null ? mDevice.getAlias() : mDevice.getAddress();
-        mProfileHint.setSummary(getString(R.string.bt_profile_hint, name));
+        setSummary(mProfileHint, getString(R.string.bt_profile_hint, name));
 
         List<CharSequence> entries = new ArrayList<>();
         List<CharSequence> values = new ArrayList<>();
         entries.add(getString(R.string.bt_codec_auto));
         values.add(BluetoothProfiles.CODEC_AUTO);
-        StringBuilder peer = new StringBuilder();
+        CharSequence[] labels = new CharSequence[selectable.size()];
         boolean ldac = false;
-        for (BluetoothCodecConfig c : selectable) {
+        for (int i = 0; i < selectable.size(); i++) {
+            BluetoothCodecConfig c = selectable.get(i);
             int type = c.getCodecType();
-            String name1 = codecName(type);
-            entries.add(name1);
+            labels[i] = codecName(type);
+            entries.add(labels[i]);
             values.add(Integer.toString(type));
             ldac |= type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC;
-            if (peer.length() > 0) {
-                peer.append('\n');
-            }
-            peer.append(name1).append(" · ").append(rates(c.getSampleRate()));
-            String b = bitsList(c.getBitsPerSample());
-            if (b != null) {
-                peer.append(" · ").append(b);
-            }
-            String rate = maxBitrate(type);
-            if (rate != null) {
-                peer.append(" · ").append(rate);
-            }
         }
-        mPeerCodecs.setSummary(peer);
-        mCodec.setEntries(entries.toArray(new CharSequence[0]));
-        mCodec.setEntryValues(values.toArray(new CharSequence[0]));
-        mCodec.setValue(mProfile.codec);
-        CharSequence entry = mCodec.getEntry();
-        mCodec.setSummary(BluetoothProfiles.CODEC_AUTO.equals(mProfile.codec)
-                ? getString(R.string.bt_codec_auto_summary) : entry);
+        mPeerCards.setCardLabels(labels);
+        for (int i = 0; i < selectable.size(); i++) {
+            BluetoothCodecConfig c = selectable.get(i);
+            String[] rate = peerRate(c.getCodecType());
+            List<String> detail = new ArrayList<>();
+            if (rate[1] != null) {
+                detail.add(rate[1]);
+            }
+            detail.add(range(c.getSampleRate(), RATE_BITS, RATE_NAMES, " kHz"));
+            String bits = range(c.getBitsPerSample(), DEPTH_BITS, DEPTH_NAMES, " bit");
+            if (bits != null) {
+                detail.add(bits);
+            }
+            mPeerCards.setCard(i, rate[0] != null ? rate[0] : "—", String.join(" · ", detail));
+        }
 
-        mLdac.setVisible(ldac);
-        mLdac.setValue(Long.toString(mProfile.ldacQuality));
-        mLdac.setSummary(mLdac.getEntry());
+        CharSequence[] newEntries = entries.toArray(new CharSequence[0]);
+        if (!java.util.Arrays.equals(mCodec.getEntries(), newEntries)) {
+            mCodec.setEntries(newEntries);
+            mCodec.setEntryValues(values.toArray(new CharSequence[0]));
+        }
+        if (!TextUtils.equals(mCodec.getValue(), mProfile.codec)) {
+            mCodec.setValue(mProfile.codec);
+        }
+        setSummary(mCodec, BluetoothProfiles.CODEC_AUTO.equals(mProfile.codec)
+                ? getString(R.string.bt_codec_auto_summary) : mCodec.getEntry());
 
-        mSbcXq.setChecked(mProfile.sbcXq);
+        if (mLdac.isVisible() != ldac) {
+            mLdac.setVisible(ldac);
+        }
+        String ldacValue = Long.toString(mProfile.ldacQuality);
+        if (!TextUtils.equals(mLdac.getValue(), ldacValue)) {
+            mLdac.setValue(ldacValue);
+        }
+        setSummary(mLdac, mLdac.getEntry());
+
+        if (mSbcXq.isChecked() != mProfile.sbcXq) {
+            mSbcXq.setChecked(mProfile.sbcXq);
+        }
         String rate = mProfile.sbcXqBitrate;
         if (mSbcXqBitrate.findIndexOfValue(rate) < 0) {
             rate = BluetoothProfiles.DEFAULT_XQ_BITRATE;
         }
-        mSbcXqBitrate.setValue(rate);
-        mSbcXqBitrate.setSummary(getString(R.string.sbc_xq_bitrate_summary,
+        if (!TextUtils.equals(mSbcXqBitrate.getValue(), rate)) {
+            mSbcXqBitrate.setValue(rate);
+        }
+        setSummary(mSbcXqBitrate, getString(R.string.sbc_xq_bitrate_summary,
                 mSbcXqBitrate.getEntry()));
     }
 
-    /* The highest bitrate the headphones accept for a codec, if known. */
-    private String maxBitrate(int type) {
+    /* Updates a summary only when it changes, so the list is not redrawn. */
+    private static void setSummary(Preference p, CharSequence summary) {
+        if (!TextUtils.equals(p.getSummary(), summary)) {
+            p.setSummary(summary);
+        }
+    }
+
+    private static final int[] RATE_BITS = {BluetoothCodecConfig.SAMPLE_RATE_44100,
+            BluetoothCodecConfig.SAMPLE_RATE_48000, BluetoothCodecConfig.SAMPLE_RATE_88200,
+            BluetoothCodecConfig.SAMPLE_RATE_96000, BluetoothCodecConfig.SAMPLE_RATE_176400,
+            BluetoothCodecConfig.SAMPLE_RATE_192000};
+    private static final String[] RATE_NAMES = {"44.1", "48", "88.2", "96", "176.4", "192"};
+    private static final int[] DEPTH_BITS = {BluetoothCodecConfig.BITS_PER_SAMPLE_16,
+            BluetoothCodecConfig.BITS_PER_SAMPLE_24, BluetoothCodecConfig.BITS_PER_SAMPLE_32};
+    private static final String[] DEPTH_NAMES = {"16", "24", "32"};
+
+    /* "44.1–96 kHz" from a capability mask, or the single value. */
+    private static String range(int mask, int[] bits, String[] names, String unit) {
+        int lo = -1, hi = -1;
+        for (int i = 0; i < bits.length; i++) {
+            if ((mask & bits[i]) != 0) {
+                if (lo < 0) {
+                    lo = i;
+                }
+                hi = i;
+            }
+        }
+        if (lo < 0) {
+            return null;
+        }
+        return (lo == hi ? names[lo] : names[lo] + "–" + names[hi]) + unit;
+    }
+
+    /*
+     * The highest bitrate the headphones accept for a codec, if known, and
+     * an optional detail (the other modes).
+     */
+    private String[] peerRate(int type) {
         switch (type) {
             case BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC: {
                 int pool = SystemProperties.getInt(PROP_PEER_SBC_BITPOOL, 0);
                 if (pool <= 0) {
-                    return null;
+                    return new String[2];
                 }
-                return getString(R.string.bt_peer_sbc_rate, sbcKbps(Math.min(pool, 53), false),
-                        sbcKbps(pool, true));
+                return new String[] {kbps(sbcKbps(Math.min(pool, 53), false)),
+                        getString(R.string.bt_peer_sbc_xq, kbps(sbcKbps(pool, true)))};
             }
             case BluetoothCodecConfig.SOURCE_CODEC_TYPE_AAC: {
                 long bps = SystemProperties.getLong(PROP_PEER_AAC_BITRATE, 0);
-                return bps > 0 ? getString(R.string.bt_peer_max_rate, bps / 1000) : null;
+                return new String[] {bps > 0 ? kbps(bps / 1000) : null, null};
             }
             case BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC:
-                return getString(R.string.bt_peer_ldac_rate);
+                return new String[] {kbps(990), "330/660/990"};
             case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX:
-                return getString(R.string.bt_peer_aptx_rate);
+                return new String[] {kbps(384), null};
             case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX_HD:
-                return getString(R.string.bt_peer_aptx_hd_rate);
+                return new String[] {kbps(576), null};
             default:
-                return null;
+                return new String[2];
         }
+    }
+
+    private static String kbps(long value) {
+        return String.format(Locale.getDefault(), "%d kbps", value);
     }
 
     /* SBC at 44.1 kHz, 8 subbands, 16 blocks, stereo: frame size to kbps. */
@@ -385,34 +454,5 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
             default:
                 return null;
         }
-    }
-
-    private static String rates(int mask) {
-        int[] bits = {BluetoothCodecConfig.SAMPLE_RATE_44100, BluetoothCodecConfig.SAMPLE_RATE_48000,
-                BluetoothCodecConfig.SAMPLE_RATE_88200, BluetoothCodecConfig.SAMPLE_RATE_96000,
-                BluetoothCodecConfig.SAMPLE_RATE_176400, BluetoothCodecConfig.SAMPLE_RATE_192000};
-        String[] names = {"44.1", "48", "88.2", "96", "176.4", "192"};
-        String list = join(mask, bits, names);
-        return list != null ? list + " kHz" : "—";
-    }
-
-    private static String bitsList(int mask) {
-        int[] bits = {BluetoothCodecConfig.BITS_PER_SAMPLE_16,
-                BluetoothCodecConfig.BITS_PER_SAMPLE_24, BluetoothCodecConfig.BITS_PER_SAMPLE_32};
-        String list = join(mask, bits, new String[] {"16", "24", "32"});
-        return list != null ? list + " bit" : null;
-    }
-
-    private static String join(int mask, int[] bits, String[] names) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < bits.length; i++) {
-            if ((mask & bits[i]) != 0) {
-                if (sb.length() > 0) {
-                    sb.append('/');
-                }
-                sb.append(names[i]);
-            }
-        }
-        return sb.length() > 0 ? sb.toString() : null;
     }
 }

@@ -110,11 +110,6 @@
     <string name="bt_peer_codecs_title">Поддерживают наушники</string>
     <string name="ldac_quality_title">Качество LDAC</string>
     <string name="bt_ldac_default">По умолчанию</string>
-    <string name="bt_peer_sbc_rate">до %1$d кбит/с, XQ до %2$d кбит/с</string>
-    <string name="bt_peer_max_rate">до %1$d кбит/с</string>
-    <string name="bt_peer_ldac_rate">330/660/990 кбит/с</string>
-    <string name="bt_peer_aptx_rate">352/384 кбит/с</string>
-    <string name="bt_peer_aptx_hd_rate">529/576 кбит/с</string>
     <string name="bt_profile_hint">Настройки выше сохраняются для устройства %1$s и применяются при каждом его подключении.</string>
     <string name="bt_profile_hint_none">Подключите наушники, чтобы изменить их настройки. Настройки сохраняются для каждого устройства и применяются при каждом подключении.</string>
     <string name="load_graph_title">Загрузка за 10 минут</string>
@@ -124,4 +119,5 @@
     <string name="bt_codec_category">Кодек</string>
     <string name="bt_sbc_category">SBC</string>
     <string name="bt_battery">Заряд %1$d%%</string>
+    <string name="bt_peer_sbc_xq">XQ %1$s</string>
 </resources>

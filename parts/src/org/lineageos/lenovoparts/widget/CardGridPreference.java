@@ -24,7 +24,7 @@ import org.lineageos.lenovoparts.R;
  */
 public class CardGridPreference extends Preference {
 
-    private int[] mLabels = new int[0];
+    private CharSequence[] mLabels = new CharSequence[0];
     private CharSequence[][] mText = new CharSequence[0][2];
     private View[] mCards;
     private boolean mGraphVisible;
@@ -40,6 +40,18 @@ public class CardGridPreference extends Preference {
 
     /** Card titles, in order; call before the preference is shown. */
     public void setCards(int... labels) {
+        CharSequence[] text = new CharSequence[labels.length];
+        for (int i = 0; i < labels.length; i++) {
+            text[i] = getContext().getText(labels[i]);
+        }
+        setCardLabels(text);
+    }
+
+    /** Card titles as text; does nothing when they are unchanged. */
+    public void setCardLabels(CharSequence... labels) {
+        if (java.util.Arrays.equals(mLabels, labels)) {
+            return;
+        }
         mLabels = labels;
         mText = new CharSequence[labels.length][2];
         mCards = null;

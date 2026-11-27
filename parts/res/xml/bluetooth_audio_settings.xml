@@ -20,11 +20,14 @@
             android:entries="@array/ldac_quality_entries"
             android:entryValues="@array/ldac_quality_values"
             android:persistent="false" />
+    </PreferenceCategory>
 
-        <Preference
-            android:key="bt_peer_codecs"
-            android:title="@string/bt_peer_codecs_title"
-            android:selectable="false" />
+    <PreferenceCategory
+        android:key="bt_peer_category"
+        android:title="@string/bt_peer_codecs_title">
+
+        <org.lineageos.lenovoparts.widget.CardGridPreference
+            android:key="bt_peer_cards" />
     </PreferenceCategory>
 
     <PreferenceCategory
