@@ -15,6 +15,7 @@ import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 
 import org.lineageos.lenovoparts.R;
 import org.lineageos.lenovoparts.widget.CardGridPreference;
+import org.lineageos.lenovoparts.widget.LoadGraphView;
 import org.lineageos.lenovoparts.widget.SegmentedPreference;
 
 import java.util.Locale;
@@ -58,6 +59,7 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
         mDashboard.setCards(R.string.perf_card_silver, R.string.perf_card_gold,
                 R.string.perf_card_prime, R.string.perf_card_gpu, R.string.perf_card_temp,
                 R.string.perf_card_memory);
+        mDashboard.setLoadGraphVisible(true);
         mSampler = new PerfStats.Sampler(getContext());
     }
 
@@ -90,6 +92,20 @@ public class PerfProfileFragment extends SettingsBasePreferenceFragment
         if (!isResumed()) {
             return;
         }
+        // Whole-CPU load, weighted by the number of cores in each cluster.
+        int cores = 0;
+        float total = 0;
+        for (int i = 0; i < s.clusters.length; i++) {
+            if (s.clusters[i].loadPercent >= 0) {
+                int n = PerfStats.CLUSTERS[i].length;
+                total += s.clusters[i].loadPercent * n;
+                cores += n;
+            }
+        }
+        float ram = s.memTotalKb > 0
+                ? 100f * (s.memTotalKb - s.memAvailKb) / s.memTotalKb : -1;
+        LoadGraphView.add(cores > 0 ? total / cores : -1, s.gpuBusy, ram);
+        mDashboard.refreshGraph();
         for (int i = 0; i < s.clusters.length; i++) {
             PerfStats.Cluster c = s.clusters[i];
             String load = c.loadPercent >= 0

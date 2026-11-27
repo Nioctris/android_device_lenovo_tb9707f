@@ -70,6 +70,16 @@
                 android:value="com.android.settings.category.ia.system" />
         </activity>
 
+        <!-- Applies the saved headphones profile on connection -->
+        <receiver
+            android:name=".audio.BluetoothConnectReceiver"
+            android:exported="true"
+            android:permission="android.permission.BLUETOOTH_CONNECT">
+            <intent-filter>
+                <action android:name="android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name=".BootCompletedReceiver"
             android:directBootAware="true"

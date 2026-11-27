@@ -77,8 +77,8 @@
     <string name="bt_audio_title">Bluetooth audio</string>
     <string name="bt_audio_summary">SBC codec quality</string>
     <string name="sbc_xq_title">High quality SBC (SBC XQ)</string>
-    <string name="sbc_xq_summary">Dual channel mode at up to 552 kbps instead of 328 kbps</string>
-    <string name="sbc_xq_hint">Applies only to the SBC codec, which is used by headphones without AAC, aptX or LDAC support. The setting takes effect the next time the headphones are connected. Some headphones may experience audio dropouts at the higher bitrate; in that case, turn this setting off.</string>
+    <string name="sbc_xq_summary">Dual channel mode with a higher bitrate than the standard 328 kbps</string>
+    <string name="sbc_xq_hint">SBC XQ applies only to the SBC codec, which is used by headphones without AAC, aptX or LDAC support or when SBC is selected above. Some headphones may experience audio dropouts at the higher bitrate; in that case, lower the bitrate or turn the setting off.</string>
     <string name="bt_card_device">Device</string>
     <string name="bt_card_codec">Codec</string>
     <string name="bt_card_format">Format</string>
@@ -104,4 +104,24 @@
     <string name="sbc_xq_bitrate_552">552 kbps (bitpool 47, recommended)</string>
     <string name="sbc_xq_bitrate_617">617 kbps (bitpool 53)</string>
     <string name="sbc_xq_bitrate_summary">%1$s. The headphones may limit the bitrate further.</string>
+    <string name="bt_codec_title">Codec</string>
+    <string name="bt_codec_auto">Automatic</string>
+    <string name="bt_codec_auto_summary">Automatic: the best codec supported by both devices</string>
+    <string name="bt_peer_codecs_title">Supported by the headphones</string>
+    <string name="ldac_quality_title">LDAC quality</string>
+    <string name="bt_ldac_default">Default</string>
+    <string name="bt_peer_sbc_rate">up to %1$d kbps, XQ up to %2$d kbps</string>
+    <string name="bt_peer_max_rate">up to %1$d kbps</string>
+    <string name="bt_peer_ldac_rate">330/660/990 kbps</string>
+    <string name="bt_peer_aptx_rate">352/384 kbps</string>
+    <string name="bt_peer_aptx_hd_rate">529/576 kbps</string>
+    <string name="bt_profile_hint">The settings above are saved for %1$s and applied each time it connects.</string>
+    <string name="bt_profile_hint_none">Connect headphones to change their settings. The settings are saved for each device and applied each time it connects.</string>
+    <string name="load_graph_title">Load, last 10 minutes</string>
+    <string name="load_cpu">CPU</string>
+    <string name="load_gpu">GPU</string>
+    <string name="load_ram">Memory</string>
+    <string name="bt_codec_category">Codec</string>
+    <string name="bt_sbc_category">SBC</string>
+    <string name="bt_battery">Battery %1$d%%</string>
 </resources>

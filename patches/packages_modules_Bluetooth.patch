@@ -56,8 +56,24 @@ index 08389c191a..6cab8fdde2 100644
      return active_hal_interface->UpdateAudioConfig(audio_config);
    }
  
+diff --git a/system/stack/a2dp/a2dp_aac.cc b/system/stack/a2dp/a2dp_aac.cc
+index f4b4416027..2a8f5a4fbf 100644
+--- a/system/stack/a2dp/a2dp_aac.cc
++++ b/system/stack/a2dp/a2dp_aac.cc
+@@ -1312,6 +1312,11 @@ bool A2dpCodecConfigAacBase::setPeerCodecCapabilities(const uint8_t* p_peer_code
+     goto fail;
+   }
+ 
++  // Shown in the device settings: what the peer accepts for this codec.
++  if (is_source_) {
++    osi_property_set("bluetooth.a2dp.peer.aac_bitrate", std::to_string(peer_info_cie.bitRate).c_str());
++  }
++
+   // Compute the selectable capability - sample rate
+   sampleRate = p_a2dp_aac_caps->sampleRate & peer_info_cie.sampleRate;
+   if (sampleRate & A2DP_AAC_SAMPLING_FREQ_44100) {
 diff --git a/system/stack/a2dp/a2dp_sbc.cc b/system/stack/a2dp/a2dp_sbc.cc
-index 9c841acdea..7265f64ff2 100644
+index 9c841acdea..b69aeb2aa0 100644
 --- a/system/stack/a2dp/a2dp_sbc.cc
 +++ b/system/stack/a2dp/a2dp_sbc.cc
 @@ -40,6 +40,7 @@
@@ -194,6 +210,18 @@ index 9c841acdea..7265f64ff2 100644
      case BTAV_A2DP_CODEC_CHANNEL_MODE_NONE:
        codec_config_.channel_mode = BTAV_A2DP_CODEC_CHANNEL_MODE_NONE;
        break;
+@@ -1368,6 +1368,11 @@ bool A2dpCodecConfigSbcBase::setPeerCodecCapabilities(const uint8_t* p_peer_code
+     goto fail;
+   }
+ 
++  // Shown in the device settings: what the peer accepts for this codec.
++  if (is_source_) {
++    osi_property_set("bluetooth.a2dp.peer.sbc_max_bitpool", std::to_string(peer_info_cie.max_bitpool).c_str());
++  }
++
+   // Compute the selectable capability - sample rate
+   samp_freq = p_a2dp_sbc_caps->samp_freq & peer_info_cie.samp_freq;
+   if (samp_freq & A2DP_SBC_IE_SAMP_FREQ_44) {
 diff --git a/system/stack/a2dp/a2dp_sbc_encoder.cc b/system/stack/a2dp/a2dp_sbc_encoder.cc
 index 1e8bd880b2..5d23281b87 100644
 --- a/system/stack/a2dp/a2dp_sbc_encoder.cc

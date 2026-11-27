@@ -28,6 +28,8 @@ public class CardGridPreference extends Preference {
     private View[] mCards;
     private boolean mGraphVisible;
     private PowerGraphView mGraph;
+    private boolean mLoadGraphVisible;
+    private LoadGraphView mLoadGraph;
 
     public CardGridPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -57,6 +59,9 @@ public class CardGridPreference extends Preference {
         holder.findViewById(R.id.graph_card)
                 .setVisibility(mGraphVisible ? View.VISIBLE : View.GONE);
         mGraph = (PowerGraphView) holder.findViewById(R.id.power_graph);
+        holder.findViewById(R.id.load_card)
+                .setVisibility(mLoadGraphVisible ? View.VISIBLE : View.GONE);
+        mLoadGraph = (LoadGraphView) holder.findViewById(R.id.load_graph);
 
         if (mCards == null || grid.getChildCount() != mLabels.length) {
             grid.removeAllViews();
@@ -116,14 +121,41 @@ public class CardGridPreference extends Preference {
 
     public void setCard(int card, CharSequence value, CharSequence detail) {
         mText[card][0] = value;
-        mText[card][1] = detail;
+        mText[card][1] = keepTogether(detail);
         apply(card);
     }
 
+    public void setLoadGraphVisible(boolean visible) {
+        mLoadGraphVisible = visible;
+        notifyChanged();
+    }
+
     public void refreshGraph() {
+        if (mLoadGraph != null) {
+            mLoadGraph.invalidate();
+        }
         if (mGraph != null) {
             mGraph.invalidate();
         }
+    }
+
+    /*
+     * Lines only break between the " · " separated parts, so that a number
+     * stays with its unit ("34.7 °C", "4.0 GB").
+     */
+    private static CharSequence keepTogether(CharSequence text) {
+        if (text == null) {
+            return null;
+        }
+        String[] parts = text.toString().split(" · ");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (sb.length() > 0) {
+                sb.append(" · ");
+            }
+            sb.append(part.replace(' ', '\u00a0'));
+        }
+        return sb.toString();
     }
 
     private void apply(int card) {

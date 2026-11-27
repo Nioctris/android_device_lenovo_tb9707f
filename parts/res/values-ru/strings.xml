@@ -77,8 +77,8 @@
     <string name="bt_audio_title">Bluetooth-аудио</string>
     <string name="bt_audio_summary">Качество кодека SBC</string>
     <string name="sbc_xq_title">SBC повышенного качества (SBC XQ)</string>
-    <string name="sbc_xq_summary">Режим dual channel с битрейтом до 552 кбит/с вместо 328 кбит/с</string>
-    <string name="sbc_xq_hint">Действует только для кодека SBC, который используют наушники без поддержки AAC, aptX и LDAC. Настройка применяется при следующем подключении наушников. На повышенном битрейте у некоторых наушников возможны прерывания звука; в этом случае отключите настройку.</string>
+    <string name="sbc_xq_summary">Режим dual channel с битрейтом выше стандартных 328 кбит/с</string>
+    <string name="sbc_xq_hint">SBC XQ действует только для кодека SBC, который используют наушники без поддержки AAC, aptX и LDAC, а также если SBC выбран выше. На повышенном битрейте у некоторых наушников возможны прерывания звука; в этом случае уменьшите битрейт или отключите настройку.</string>
     <string name="bt_card_device">Устройство</string>
     <string name="bt_card_codec">Кодек</string>
     <string name="bt_card_format">Формат</string>
@@ -104,4 +104,24 @@
     <string name="sbc_xq_bitrate_552">552 кбит/с (bitpool 47, рекомендуется)</string>
     <string name="sbc_xq_bitrate_617">617 кбит/с (bitpool 53)</string>
     <string name="sbc_xq_bitrate_summary">%1$s. Наушники могут дополнительно ограничить битрейт.</string>
+    <string name="bt_codec_title">Кодек</string>
+    <string name="bt_codec_auto">Автоматически</string>
+    <string name="bt_codec_auto_summary">Автоматически: лучший кодек, который поддерживают оба устройства</string>
+    <string name="bt_peer_codecs_title">Поддерживают наушники</string>
+    <string name="ldac_quality_title">Качество LDAC</string>
+    <string name="bt_ldac_default">По умолчанию</string>
+    <string name="bt_peer_sbc_rate">до %1$d кбит/с, XQ до %2$d кбит/с</string>
+    <string name="bt_peer_max_rate">до %1$d кбит/с</string>
+    <string name="bt_peer_ldac_rate">330/660/990 кбит/с</string>
+    <string name="bt_peer_aptx_rate">352/384 кбит/с</string>
+    <string name="bt_peer_aptx_hd_rate">529/576 кбит/с</string>
+    <string name="bt_profile_hint">Настройки выше сохраняются для устройства %1$s и применяются при каждом его подключении.</string>
+    <string name="bt_profile_hint_none">Подключите наушники, чтобы изменить их настройки. Настройки сохраняются для каждого устройства и применяются при каждом подключении.</string>
+    <string name="load_graph_title">Загрузка за 10 минут</string>
+    <string name="load_cpu">ЦП</string>
+    <string name="load_gpu">ГП</string>
+    <string name="load_ram">Память</string>
+    <string name="bt_codec_category">Кодек</string>
+    <string name="bt_sbc_category">SBC</string>
+    <string name="bt_battery">Заряд %1$d%%</string>
 </resources>

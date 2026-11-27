@@ -26,21 +26,20 @@ import com.android.settingslib.widget.SettingsBasePreferenceFragment;
 import org.lineageos.lenovoparts.R;
 import org.lineageos.lenovoparts.widget.CardGridPreference;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
         implements Preference.OnPreferenceChangeListener {
 
-    /* Read by the Bluetooth stack when it configures an SBC stream. */
-    private static final String PROP_SBC_XQ = "persist.bluetooth.sbc_xq";
-    private static final String PROP_SBC_XQ_BITRATE = "persist.bluetooth.sbc_xq_bitrate";
-    private static final String DEFAULT_XQ_BITRATE = "552";
-    /* Published by the Bluetooth stack for the active stream. */
+    /* Published by the Bluetooth stack for the active stream and peer. */
     private static final String PROP_ENCODING = "bluetooth.a2dp.encoding";
     private static final String PROP_BITRATE = "bluetooth.a2dp.bitrate";
     private static final String PROP_SBC_BITPOOL = "bluetooth.a2dp.sbc.bitpool";
     private static final String PROP_SBC_MODE = "bluetooth.a2dp.sbc.mode";
+    private static final String PROP_PEER_SBC_BITPOOL = "bluetooth.a2dp.peer.sbc_max_bitpool";
+    private static final String PROP_PEER_AAC_BITRATE = "bluetooth.a2dp.peer.aac_bitrate";
 
     private static final long REFRESH_MS = 2000;
 
@@ -53,10 +52,17 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
+    private CardGridPreference mDashboard;
+    private ListPreference mCodec;
+    private ListPreference mLdac;
+    private Preference mPeerCodecs;
     private SwitchPreferenceCompat mSbcXq;
     private ListPreference mSbcXqBitrate;
-    private CardGridPreference mDashboard;
+    private Preference mProfileHint;
     private BluetoothA2dp mA2dp;
+
+    private BluetoothDevice mDevice;
+    private BluetoothProfiles.Profile mProfile;
 
     private final BluetoothProfile.ServiceListener mListener =
             new BluetoothProfile.ServiceListener() {
@@ -83,14 +89,20 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.bluetooth_audio_settings, rootKey);
-        mSbcXq = findPreference("sbc_xq");
-        mSbcXq.setOnPreferenceChangeListener(this);
-        mSbcXqBitrate = findPreference("sbc_xq_bitrate");
-        mSbcXqBitrate.setOnPreferenceChangeListener(this);
         mDashboard = findPreference("bt_dashboard");
         mDashboard.setCards(R.string.bt_card_device, R.string.bt_card_codec,
                 R.string.bt_card_format, R.string.bt_card_bitrate, R.string.bt_card_encoding,
                 R.string.bt_card_channels);
+        mCodec = findPreference("bt_codec");
+        mLdac = findPreference("ldac_quality");
+        mPeerCodecs = findPreference("bt_peer_codecs");
+        mSbcXq = findPreference("sbc_xq");
+        mSbcXqBitrate = findPreference("sbc_xq_bitrate");
+        mProfileHint = findPreference("bt_profile_hint");
+        mCodec.setOnPreferenceChangeListener(this);
+        mLdac.setOnPreferenceChangeListener(this);
+        mSbcXq.setOnPreferenceChangeListener(this);
+        mSbcXqBitrate.setOnPreferenceChangeListener(this);
 
         BluetoothManager bm = getContext().getSystemService(BluetoothManager.class);
         BluetoothAdapter adapter = bm != null ? bm.getAdapter() : null;
@@ -102,10 +114,6 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
     @Override
     public void onResume() {
         super.onResume();
-        boolean xq = SystemProperties.getBoolean(PROP_SBC_XQ, false);
-        mSbcXq.setChecked(xq);
-        setBitrate(SystemProperties.get(PROP_SBC_XQ_BITRATE, DEFAULT_XQ_BITRATE));
-        mSbcXqBitrate.setEnabled(xq);
         mHandler.post(mRefresh);
     }
 
@@ -126,25 +134,23 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference == mSbcXq) {
-            boolean xq = (Boolean) newValue;
-            SystemProperties.set(PROP_SBC_XQ, xq ? "true" : "false");
-            mSbcXqBitrate.setEnabled(xq);
-        } else if (preference == mSbcXqBitrate) {
-            SystemProperties.set(PROP_SBC_XQ_BITRATE, (String) newValue);
-            setBitrate((String) newValue);
+        if (mDevice == null || mProfile == null) {
             return false;
         }
-        return true;
-    }
-
-    private void setBitrate(String value) {
-        if (mSbcXqBitrate.findIndexOfValue(value) < 0) {
-            value = DEFAULT_XQ_BITRATE;
+        if (preference == mCodec) {
+            mProfile.codec = (String) newValue;
+        } else if (preference == mLdac) {
+            mProfile.ldacQuality = Long.parseLong((String) newValue);
+            mProfile.codec = Integer.toString(BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC);
+        } else if (preference == mSbcXq) {
+            mProfile.sbcXq = (Boolean) newValue;
+        } else if (preference == mSbcXqBitrate) {
+            mProfile.sbcXqBitrate = (String) newValue;
         }
-        mSbcXqBitrate.setValue(value);
-        mSbcXqBitrate.setSummary(getString(R.string.sbc_xq_bitrate_summary,
-                mSbcXqBitrate.getEntry()));
+        BluetoothProfiles.save(getContext(), mDevice, mProfile);
+        BluetoothProfiles.apply(mA2dp, mDevice, mProfile);
+        mHandler.postDelayed(this::refresh, 700);
+        return false;
     }
 
     private void refresh() {
@@ -152,8 +158,13 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
             return;
         }
         BluetoothDevice device = activeDevice();
+        if (device == null || !device.equals(mDevice)) {
+            mDevice = device;
+            mProfile = device != null ? BluetoothProfiles.load(getContext(), device) : null;
+        }
         BluetoothCodecStatus status = device != null ? mA2dp.getCodecStatus(device) : null;
         BluetoothCodecConfig config = status != null ? status.getCodecConfig() : null;
+        updateControls(status);
         if (config == null) {
             mDashboard.setCard(CARD_DEVICE, getString(R.string.bt_not_connected), null);
             for (int card = CARD_CODEC; card <= CARD_CHANNELS; card++) {
@@ -163,44 +174,140 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
         }
 
         String name = device.getAlias();
-        mDashboard.setCard(CARD_DEVICE, name != null ? name : device.getAddress(), null);
+        int battery = device.getBatteryLevel();
+        mDashboard.setCard(CARD_DEVICE, name != null ? name : device.getAddress(),
+                battery >= 0 ? getString(R.string.bt_battery, battery) : null);
 
         int type = config.getCodecType();
         mDashboard.setCard(CARD_CODEC, codecName(type),
                 type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC
                         ? ldacMode(config.getCodecSpecific1()) : null);
-
         mDashboard.setCard(CARD_FORMAT, sampleRate(config.getSampleRate()),
                 bits(config.getBitsPerSample()));
 
-        long bps = SystemProperties.getLong(PROP_BITRATE, 0);
-        String bitpool = null;
+        long kbps = SystemProperties.getLong(PROP_BITRATE, 0) / 1000;
+        String bitrateDetail = null;
+        String channelDetail = null;
         if (type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC) {
             int pool = SystemProperties.getInt(PROP_SBC_BITPOOL, 0);
+            String mode = SystemProperties.get(PROP_SBC_MODE, "");
             if (pool > 0) {
-                bitpool = getString(R.string.bt_bitpool, pool);
+                kbps = sbcKbps(pool, "dual".equals(mode));
+                bitrateDetail = getString(R.string.bt_bitpool, pool);
+            }
+            if ("dual".equals(mode)) {
+                channelDetail = getString(R.string.bt_sbc_dual);
+            } else if ("joint".equals(mode)) {
+                channelDetail = getString(R.string.bt_sbc_joint);
             }
         }
-        mDashboard.setCard(CARD_BITRATE, bps > 0
-                ? String.format(Locale.getDefault(), "%d kbps", bps / 1000) : "—", bitpool);
+        mDashboard.setCard(CARD_BITRATE, kbps > 0
+                ? String.format(Locale.getDefault(), "%d kbps", kbps) : "—", bitrateDetail);
 
         String encoding = SystemProperties.get(PROP_ENCODING, "");
         mDashboard.setCard(CARD_ENCODING, getString("offload".equals(encoding)
                 ? R.string.bt_encoding_dsp : "software".equals(encoding)
                         ? R.string.bt_encoding_cpu : R.string.bt_unknown), null);
+        mDashboard.setCard(CARD_CHANNELS,
+                config.getChannelMode() == BluetoothCodecConfig.CHANNEL_MODE_MONO
+                        ? getString(R.string.bt_channels_mono)
+                        : getString(R.string.bt_channels_stereo), channelDetail);
+    }
 
-        String channels = config.getChannelMode() == BluetoothCodecConfig.CHANNEL_MODE_MONO
-                ? getString(R.string.bt_channels_mono) : getString(R.string.bt_channels_stereo);
-        String detail = null;
-        if (type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC) {
-            String mode = SystemProperties.get(PROP_SBC_MODE, "");
-            if ("dual".equals(mode)) {
-                detail = getString(R.string.bt_sbc_dual);
-            } else if ("joint".equals(mode)) {
-                detail = getString(R.string.bt_sbc_joint);
+    private void updateControls(BluetoothCodecStatus status) {
+        List<BluetoothCodecConfig> selectable =
+                status != null ? status.getCodecsSelectableCapabilities() : null;
+        boolean connected = mProfile != null && selectable != null && !selectable.isEmpty();
+        mCodec.setEnabled(connected);
+        mSbcXq.setEnabled(connected);
+        mSbcXqBitrate.setEnabled(connected && mProfile.sbcXq);
+        if (!connected) {
+            mCodec.setSummary(null);
+            mLdac.setVisible(false);
+            mPeerCodecs.setSummary(getString(R.string.bt_not_connected));
+            mProfileHint.setSummary(R.string.bt_profile_hint_none);
+            return;
+        }
+        String name = mDevice.getAlias() != null ? mDevice.getAlias() : mDevice.getAddress();
+        mProfileHint.setSummary(getString(R.string.bt_profile_hint, name));
+
+        List<CharSequence> entries = new ArrayList<>();
+        List<CharSequence> values = new ArrayList<>();
+        entries.add(getString(R.string.bt_codec_auto));
+        values.add(BluetoothProfiles.CODEC_AUTO);
+        StringBuilder peer = new StringBuilder();
+        boolean ldac = false;
+        for (BluetoothCodecConfig c : selectable) {
+            int type = c.getCodecType();
+            String name1 = codecName(type);
+            entries.add(name1);
+            values.add(Integer.toString(type));
+            ldac |= type == BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC;
+            if (peer.length() > 0) {
+                peer.append('\n');
+            }
+            peer.append(name1).append(" · ").append(rates(c.getSampleRate()));
+            String b = bitsList(c.getBitsPerSample());
+            if (b != null) {
+                peer.append(" · ").append(b);
+            }
+            String rate = maxBitrate(type);
+            if (rate != null) {
+                peer.append(" · ").append(rate);
             }
         }
-        mDashboard.setCard(CARD_CHANNELS, channels, detail);
+        mPeerCodecs.setSummary(peer);
+        mCodec.setEntries(entries.toArray(new CharSequence[0]));
+        mCodec.setEntryValues(values.toArray(new CharSequence[0]));
+        mCodec.setValue(mProfile.codec);
+        CharSequence entry = mCodec.getEntry();
+        mCodec.setSummary(BluetoothProfiles.CODEC_AUTO.equals(mProfile.codec)
+                ? getString(R.string.bt_codec_auto_summary) : entry);
+
+        mLdac.setVisible(ldac);
+        mLdac.setValue(Long.toString(mProfile.ldacQuality));
+        mLdac.setSummary(mLdac.getEntry());
+
+        mSbcXq.setChecked(mProfile.sbcXq);
+        String rate = mProfile.sbcXqBitrate;
+        if (mSbcXqBitrate.findIndexOfValue(rate) < 0) {
+            rate = BluetoothProfiles.DEFAULT_XQ_BITRATE;
+        }
+        mSbcXqBitrate.setValue(rate);
+        mSbcXqBitrate.setSummary(getString(R.string.sbc_xq_bitrate_summary,
+                mSbcXqBitrate.getEntry()));
+    }
+
+    /* The highest bitrate the headphones accept for a codec, if known. */
+    private String maxBitrate(int type) {
+        switch (type) {
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC: {
+                int pool = SystemProperties.getInt(PROP_PEER_SBC_BITPOOL, 0);
+                if (pool <= 0) {
+                    return null;
+                }
+                return getString(R.string.bt_peer_sbc_rate, sbcKbps(Math.min(pool, 53), false),
+                        sbcKbps(pool, true));
+            }
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_AAC: {
+                long bps = SystemProperties.getLong(PROP_PEER_AAC_BITRATE, 0);
+                return bps > 0 ? getString(R.string.bt_peer_max_rate, bps / 1000) : null;
+            }
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_LDAC:
+                return getString(R.string.bt_peer_ldac_rate);
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX:
+                return getString(R.string.bt_peer_aptx_rate);
+            case BluetoothCodecConfig.SOURCE_CODEC_TYPE_APTX_HD:
+                return getString(R.string.bt_peer_aptx_hd_rate);
+            default:
+                return null;
+        }
+    }
+
+    /* SBC at 44.1 kHz, 8 subbands, 16 blocks, stereo: frame size to kbps. */
+    private static long sbcKbps(int bitpool, boolean dual) {
+        int frame = dual ? 4 + 8 + 4 * bitpool : 4 + 8 + (8 + 16 * bitpool + 7) / 8;
+        return Math.round(frame * 8 * 44100.0 / 128 / 1000);
     }
 
     private BluetoothDevice activeDevice() {
@@ -278,5 +385,34 @@ public class BluetoothAudioFragment extends SettingsBasePreferenceFragment
             default:
                 return null;
         }
+    }
+
+    private static String rates(int mask) {
+        int[] bits = {BluetoothCodecConfig.SAMPLE_RATE_44100, BluetoothCodecConfig.SAMPLE_RATE_48000,
+                BluetoothCodecConfig.SAMPLE_RATE_88200, BluetoothCodecConfig.SAMPLE_RATE_96000,
+                BluetoothCodecConfig.SAMPLE_RATE_176400, BluetoothCodecConfig.SAMPLE_RATE_192000};
+        String[] names = {"44.1", "48", "88.2", "96", "176.4", "192"};
+        String list = join(mask, bits, names);
+        return list != null ? list + " kHz" : "—";
+    }
+
+    private static String bitsList(int mask) {
+        int[] bits = {BluetoothCodecConfig.BITS_PER_SAMPLE_16,
+                BluetoothCodecConfig.BITS_PER_SAMPLE_24, BluetoothCodecConfig.BITS_PER_SAMPLE_32};
+        String list = join(mask, bits, new String[] {"16", "24", "32"});
+        return list != null ? list + " bit" : null;
+    }
+
+    private static String join(int mask, int[] bits, String[] names) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bits.length; i++) {
+            if ((mask & bits[i]) != 0) {
+                if (sb.length() > 0) {
+                    sb.append('/');
+                }
+                sb.append(names[i]);
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 }

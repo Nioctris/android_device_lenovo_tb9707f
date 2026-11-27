@@ -40,4 +40,18 @@
         <item>552</item>
         <item>617</item>
     </string-array>
+    <string-array name="ldac_quality_entries" translatable="false">
+        <item>@string/bt_ldac_default</item>
+        <item>@string/bt_ldac_quality</item>
+        <item>@string/bt_ldac_normal</item>
+        <item>@string/bt_ldac_connection</item>
+        <item>@string/bt_ldac_adaptive</item>
+    </string-array>
+    <string-array name="ldac_quality_values" translatable="false">
+        <item>-1</item>
+        <item>1000</item>
+        <item>1001</item>
+        <item>1002</item>
+        <item>1003</item>
+    </string-array>
 </resources>
