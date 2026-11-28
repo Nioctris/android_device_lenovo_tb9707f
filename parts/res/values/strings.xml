@@ -75,7 +75,7 @@
     <string name="perf_memory_detail">of %1$s</string>
     <string name="perf_zram">zram %1$s of %2$s</string>
     <string name="bt_audio_title">Bluetooth audio</string>
-    <string name="bt_audio_summary">SBC codec quality</string>
+    <string name="bt_audio_summary">Codec, quality and headphone profiles</string>
     <string name="sbc_xq_title">High quality SBC (SBC XQ)</string>
     <string name="sbc_xq_summary">Dual channel mode with a higher bitrate than the standard 328 kbps</string>
     <string name="sbc_xq_hint">SBC XQ applies only to the SBC codec, which is used by headphones without AAC, aptX or LDAC support or when SBC is selected above. Some headphones may experience audio dropouts at the higher bitrate; in that case, lower the bitrate or turn the setting off.</string>
@@ -123,4 +123,7 @@
     <string name="bt_rate_up_to">up to %1$d kbps</string>
     <string name="bt_rate_sbc">up to %1$d kbps
 XQ up to %2$d kbps</string>
+    <string name="chart_now">now</string>
+    <string name="chart_minutes">min</string>
+    <string name="chart_ago">ago</string>
 </resources>

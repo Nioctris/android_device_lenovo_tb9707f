@@ -75,7 +75,7 @@
     <string name="perf_memory_detail">из %1$s</string>
     <string name="perf_zram">zram %1$s из %2$s</string>
     <string name="bt_audio_title">Bluetooth-аудио</string>
-    <string name="bt_audio_summary">Качество кодека SBC</string>
+    <string name="bt_audio_summary">Кодек, качество и профили наушников</string>
     <string name="sbc_xq_title">SBC повышенного качества (SBC XQ)</string>
     <string name="sbc_xq_summary">Режим dual channel с битрейтом выше стандартных 328 кбит/с</string>
     <string name="sbc_xq_hint">SBC XQ действует только для кодека SBC, который используют наушники без поддержки AAC, aptX и LDAC, а также если SBC выбран выше. На повышенном битрейте у некоторых наушников возможны прерывания звука; в этом случае уменьшите битрейт или отключите настройку.</string>
@@ -123,4 +123,7 @@
     <string name="bt_rate_up_to">до %1$d кбит/с</string>
     <string name="bt_rate_sbc">до %1$d кбит/с
 XQ до %2$d кбит/с</string>
+    <string name="chart_now">сейчас</string>
+    <string name="chart_minutes">мин</string>
+    <string name="chart_ago">назад</string>
 </resources>

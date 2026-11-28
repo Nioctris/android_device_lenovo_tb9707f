@@ -10,7 +10,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 
-import org.lineageos.lenovoparts.MainActivity;
+import org.lineageos.lenovoparts.spa.PartsMainActivity;
 import org.lineageos.lenovoparts.charging.ChargingActivity;
 import org.lineageos.lenovoparts.perf.PerfProfileActivity;
 
@@ -22,7 +22,7 @@ public class TilePreferencesActivity extends Activity {
         super.onCreate(savedInstanceState);
         ComponentName tile = getIntent().getParcelableExtra(Intent.EXTRA_COMPONENT_NAME,
                 ComponentName.class);
-        Class<?> target = MainActivity.class;
+        Class<?> target = PartsMainActivity.class;
         if (tile != null) {
             String name = tile.getClassName();
             if (name.equals(BypassChargingTileService.class.getName())) {

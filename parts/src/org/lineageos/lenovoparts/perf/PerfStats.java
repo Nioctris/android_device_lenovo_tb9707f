@@ -13,13 +13,13 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /** CPU clusters, GPU, temperatures and memory, read once per refresh. */
-final class PerfStats {
+public final class PerfStats {
 
     /** SM8250 clusters: silver 0-3, gold 4-6, prime 7. */
     static final int[][] CLUSTERS = {{0, 1, 2, 3}, {4, 5, 6}, {7}};
     private static final int[] POLICIES = {0, 4, 7};
 
-    static final class Cluster {
+    public static final class Cluster {
         long curKhz, minKhz, maxKhz;
         int loadPercent = -1;
     }
@@ -31,14 +31,14 @@ final class PerfStats {
     long memTotalKb, memAvailKb, swapTotalKb, swapFreeKb;
 
     /** Previous per-core usage, to turn the cumulative counters into a load. */
-    static final class Sampler {
+    public static final class Sampler {
         private long[] mActive;
         private long[] mTotal;
 
-        Sampler(Context context) {
+        public Sampler(Context context) {
         }
 
-        PerfStats read() {
+        public PerfStats read() {
             PerfStats s = new PerfStats();
             for (int i = 0; i < CLUSTERS.length; i++) {
                 Cluster c = new Cluster();

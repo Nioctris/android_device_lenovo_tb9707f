@@ -10,7 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /** One reading of the charger, charge pumps and battery gauges. */
-final class PowerStats {
+public final class PowerStats {
 
     private static final String PSY = "/sys/class/power_supply/";
 

@@ -6,7 +6,10 @@
 android_app {
     name: "LenovoParts",
 
-    srcs: ["src/**/*.java"],
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.kt",
+    ],
     resource_dirs: ["res"],
     certificate: "platform",
     // KeyHandler implements com.android.internal.os.DeviceKeyHandler and is
@@ -20,9 +23,11 @@ android_app {
     },
 
     static_libs: [
-        "androidx.preference_preference",
         "pixel-power-ext-V2-java",
-        "SettingsLibCollapsingToolbarBaseActivity",
-        "SettingsLibSettingsTheme",
+        "SpaLib",
+        "androidx.compose.runtime_runtime",
+        "kotlinx_coroutines_android",
     ],
+
+    kotlincflags: ["-Xjvm-default=all"],
 }

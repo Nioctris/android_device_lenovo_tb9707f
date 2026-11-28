@@ -14,12 +14,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
+        android:name=".LenovoPartsApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.SubSettingsBase">
+        android:theme="@style/Theme.SpaLib">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".spa.PartsMainActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
@@ -27,6 +29,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".spa.PartsBrowseActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="false" />
+
 
         <activity
             android:name=".display.RefreshRateActivity"
