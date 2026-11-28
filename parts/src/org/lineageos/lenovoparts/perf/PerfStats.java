@@ -16,19 +16,19 @@ import java.io.IOException;
 public final class PerfStats {
 
     /** SM8250 clusters: silver 0-3, gold 4-6, prime 7. */
-    static final int[][] CLUSTERS = {{0, 1, 2, 3}, {4, 5, 6}, {7}};
+    public static final int[][] CLUSTERS = {{0, 1, 2, 3}, {4, 5, 6}, {7}};
     private static final int[] POLICIES = {0, 4, 7};
 
     public static final class Cluster {
         long curKhz, minKhz, maxKhz;
-        int loadPercent = -1;
+        public int loadPercent = -1;
     }
 
-    final Cluster[] clusters = new Cluster[CLUSTERS.length];
+    public final Cluster[] clusters = new Cluster[CLUSTERS.length];
     long gpuHz, gpuMaxHz;
-    int gpuBusy = -1;
+    public int gpuBusy = -1;
     float cpuTemp = Float.NaN, gpuTemp = Float.NaN, skinTemp = Float.NaN;
-    long memTotalKb, memAvailKb, swapTotalKb, swapFreeKb;
+    public long memTotalKb, memAvailKb, swapTotalKb, swapFreeKb;
 
     /** Previous per-core usage, to turn the cumulative counters into a load. */
     public static final class Sampler {

@@ -44,7 +44,7 @@ public final class PowerStats {
     boolean bypass;
     boolean limitBypass;
 
-    static PowerStats read() {
+    public static PowerStats read() {
         PowerStats s = new PowerStats();
         s.status = str("battery/status");
         s.capacity = (int) num("battery/capacity");
@@ -73,7 +73,7 @@ public final class PowerStats {
     }
 
     /** Battery power in watts, positive while charging. */
-    double batteryWatts() {
+    public double batteryWatts() {
         return batteryUa * (double) batteryUv / 1e12;
     }
 

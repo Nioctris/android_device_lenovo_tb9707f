@@ -36,6 +36,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import org.lineageos.lenovoparts.R
 import org.lineageos.lenovoparts.ui.AreaChart
+import org.lineageos.lenovoparts.ui.Samples
 import org.lineageos.lenovoparts.ui.ChartCard
 import org.lineageos.lenovoparts.ui.LockedSlider
 import org.lineageos.lenovoparts.ui.Metric
@@ -61,15 +62,15 @@ private fun PowerPage() {
     PartsScaffold(stringResource(R.string.charging_title)) {
         MetricGrid(powerMetrics(context, state?.stats))
         Spacer(Modifier.height(8.dp))
-        val history = state?.history ?: FloatArray(0)
-        val max = ceil(maxOf(5f, history.maxOrNull() ?: 0f) / 5f) * 5f
-        val min = floor(minOf(-5f, history.minOrNull() ?: 0f) / 5f) * 5f
+        val history = state?.history ?: Samples.EMPTY
+        val max = ceil(maxOf(5f, history.values.maxOrNull() ?: 0f) / 5f) * 5f
+        val min = floor(minOf(-5f, history.values.minOrNull() ?: 0f) / 5f) * 5f
         ChartCard(
             title = stringResource(R.string.power_graph_title),
             value = state?.let { signedWatts(it.stats.batteryWatts()) },
         ) {
             AreaChart(
-                samples = history, window = 600, min = min, max = max, base = 0f,
+                samples = history, now = state?.now ?: 0L, min = min, max = max, base = 0f,
                 color = colorResource(R.color.graph_charge),
                 negativeColor = colorResource(R.color.graph_discharge),
                 format = { signedWatts(it.toDouble()) },

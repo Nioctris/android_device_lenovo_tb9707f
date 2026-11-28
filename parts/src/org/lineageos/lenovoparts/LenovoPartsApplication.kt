@@ -13,5 +13,6 @@ class LenovoPartsApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         SpaEnvironmentFactory.reset(PartsSpaEnvironment(this))
+        Monitor.start(this)
     }
 }

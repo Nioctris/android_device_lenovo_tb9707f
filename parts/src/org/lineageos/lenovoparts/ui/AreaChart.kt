@@ -42,25 +42,29 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import kotlin.math.ceil
+import org.lineageos.lenovoparts.Monitor
 import org.lineageos.lenovoparts.R
 
 /**
  * A time series drawn as a smoothed line with a gradient fill towards
- * [base]. [samples] is oldest first, one per second; [window] is how many
- * samples the full width stands for, so the line grows in from the right.
- * Values below [base] use [negativeColor] when given. Dragging across the
- * chart shows the value at that moment.
+ * [base]. The right edge is [now] and the full width spans [window] ms.
+ * Samples are averaged into buckets fixed in time, so a new sample only
+ * changes the newest point and the rest of the line just moves left.
+ * Gaps in the samples (the device was asleep) break the line. Values
+ * below [base] use [negativeColor] when given. Dragging across the chart
+ * shows the value at that moment.
  */
 @Composable
 fun AreaChart(
-    samples: FloatArray,
-    window: Int,
+    samples: Samples,
+    now: Long,
     min: Float,
     max: Float,
     color: Color,
     gridLines: List<Pair<Float, String>>,
     format: (Float) -> String,
     modifier: Modifier = Modifier,
+    window: Long = Monitor.WINDOW_MS,
     height: Dp = 160.dp,
     base: Float = min,
     negativeColor: Color? = null,
@@ -73,7 +77,7 @@ fun AreaChart(
         color = MaterialTheme.colorScheme.inverseOnSurface)
     val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val measurer = rememberTextMeasurer()
-    val now = stringResource(R.string.chart_now)
+    val nowLabel = stringResource(R.string.chart_now)
     val minutes = stringResource(R.string.chart_minutes)
     val ago = stringResource(R.string.chart_ago)
     var touchX by remember { mutableStateOf<Float?>(null) }
@@ -98,12 +102,14 @@ fun AreaChart(
         val labelWidth = gridLines.maxOfOrNull {
             measurer.measure(it.second, labelStyle).size.width
         } ?: 0
-        val axisHeight = measurer.measure(now, labelStyle).size.height
+        val axisHeight = measurer.measure(nowLabel, labelStyle).size.height
         val right = size.width - labelWidth - 10.dp.toPx()
         val top = 10.dp.toPx()
         val bottom = size.height - axisHeight - 10.dp.toPx()
-        fun y(v: Float) = bottom - (v - min) / (max - min) * (bottom - top)
+        fun y(v: Float) = (bottom - (v - min) / (max - min) * (bottom - top)).coerceIn(top, bottom)
         val baseY = y(base)
+        val pxPerMs = right / window
+        fun x(t: Long) = right - (now - t) * pxPerMs
 
         // Grid and scale.
         for ((value, label) in gridLines) {
@@ -117,61 +123,70 @@ fun AreaChart(
         }
         // Time axis.
         val axisY = size.height - axisHeight
-        val marks = listOf(0f to "−${window / 60} $minutes", 0.5f to "−${window / 120} $minutes",
-            1f to now)
+        val windowMin = (window / 60000).toInt()
+        val marks = listOf(0f to "−$windowMin $minutes", 0.5f to "−${windowMin / 2} $minutes",
+            1f to nowLabel)
         for ((f, label) in marks) {
             val text = measurer.measure(label, labelStyle)
-            val x = (f * right - f * text.size.width).coerceIn(0f, right - text.size.width)
-            drawText(text, topLeft = Offset(x, axisY))
+            val tx = (f * right - f * text.size.width).coerceIn(0f, right - text.size.width)
+            drawText(text, topLeft = Offset(tx, axisY))
         }
-        if (samples.size < 2) return@Canvas
 
-        // Average into buckets a few pixels wide, newest at the right edge.
-        val buckets = (right / 3.dp.toPx()).toInt().coerceAtLeast(2)
-        val perBucket = window.toFloat() / buckets
-        val first = window - samples.size
-        val xs = ArrayList<Float>(buckets)
-        val ys = ArrayList<Float>(buckets)
-        for (b in 0 until buckets) {
-            val from = maxOf(ceil(b * perBucket).toInt(), first)
-            val to = ceil((b + 1) * perBucket).toInt()
-            if (to <= from) continue
-            var sum = 0f
-            for (slot in from until to) sum += samples[slot - first]
-            xs += (b + 0.5f) / buckets * right
-            ys += y(sum / (to - from)).coerceIn(top, bottom)
-        }
-        if (xs.size < 2) return@Canvas
-        // The newest sample sits on the right edge.
-        xs[xs.size - 1] = right
-        ys[ys.size - 1] = y(samples.last()).coerceIn(top, bottom)
-
-        // Catmull-Rom through the points, as cubic Beziers.
-        val line = Path().apply {
-            moveTo(xs[0], ys[0])
-            for (i in 0 until xs.size - 1) {
-                val i0 = maxOf(i - 1, 0)
-                val i3 = minOf(i + 2, xs.size - 1)
-                cubicTo(
-                    xs[i] + (xs[i + 1] - xs[i0]) / 6f,
-                    (ys[i] + (ys[i + 1] - ys[i0]) / 6f).coerceIn(top, bottom),
-                    xs[i + 1] - (xs[i3] - xs[i]) / 6f,
-                    (ys[i + 1] - (ys[i3] - ys[i]) / 6f).coerceIn(top, bottom),
-                    xs[i + 1], ys[i + 1],
-                )
+        // Average into buckets about 2 px wide, aligned to whole multiples
+        // of the bucket length so they stay the same between frames.
+        val bucketMs = (ceil(2.dp.toPx() / pxPerMs / Monitor.PERIOD_MS).toLong()
+            .coerceAtLeast(1)) * Monitor.PERIOD_MS
+        val gapMs = 3 * Monitor.PERIOD_MS + bucketMs
+        val from = now - window - bucketMs
+        val ts = ArrayList<Long>()
+        val vs = ArrayList<Float>()
+        val segStart = ArrayList<Int>()
+        var i = 0
+        val times = samples.times
+        val values = samples.values
+        while (i < samples.size && times[i] < from) i++
+        var lastTime = Long.MIN_VALUE
+        while (i < samples.size) {
+            val k = times[i] / bucketMs
+            var sumT = 0.0
+            var sumV = 0.0
+            var n = 0
+            val firstTime = times[i]
+            while (i < samples.size && times[i] / bucketMs == k) {
+                sumT += times[i]
+                sumV += values[i]
+                n++
+                lastTime = times[i]
+                i++
             }
+            if (ts.isEmpty() || firstTime - prevTime(times, i - n) > gapMs) {
+                segStart += ts.size
+            }
+            ts += (sumT / n).toLong()
+            vs += (sumV / n).toFloat()
         }
-        val area = Path().apply {
-            addPath(line)
-            lineTo(xs.last(), baseY)
-            lineTo(xs.first(), baseY)
-            close()
+        if (ts.isEmpty()) return@Canvas
+        val xs = FloatArray(ts.size) { x(ts[it]) }
+        val ys = FloatArray(ts.size) { y(vs[it]) }
+
+        val line = Path()
+        val area = Path()
+        for (s in segStart.indices) {
+            val a = segStart[s]
+            val b = if (s + 1 < segStart.size) segStart[s + 1] else ts.size
+            val seg = Path()
+            monotone(seg, xs, ys, a, b)
+            line.addPath(seg)
+            area.addPath(seg)
+            area.lineTo(xs[b - 1], baseY)
+            area.lineTo(xs[a], baseY)
+            area.close()
         }
         val stroke = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
 
         // Above the base line in [color], below it in [negativeColor].
         fun drawSide(c: Color, clipTop: Float, clipBottom: Float, towardsTop: Boolean) {
-            clipRect(0f, clipTop, size.width, clipBottom) {
+            clipRect(0f, clipTop, right + stroke.width, clipBottom) {
                 val edge = if (towardsTop) top else bottom
                 drawPath(area, Brush.verticalGradient(
                     listOf(c.copy(alpha = 0.42f), c.copy(alpha = 0.03f)),
@@ -185,36 +200,85 @@ fun AreaChart(
 
         fun colorAt(v: Float) = if (v < base) below else color
 
-        // Current value: a dot with a soft halo on the right edge.
-        val lastY = ys.last()
-        val lastColor = colorAt(samples.last())
-        drawCircle(lastColor.copy(alpha = 0.25f), 8.dp.toPx(), Offset(right, lastY))
-        drawCircle(cardColor, 4.5.dp.toPx(), Offset(right, lastY))
-        drawCircle(lastColor, 3.dp.toPx(), Offset(right, lastY))
-
-        // Scrubbing: the value under the finger.
-        val tx = touchX
-        if (tx != null) {
-            val x = tx.coerceIn(xs.first(), right)
-            val slot = (x / right * window).toInt().coerceIn(first, window - 1)
-            val value = samples[slot - first]
-            val secondsAgo = window - 1 - slot
-            val py = y(value).coerceIn(top, bottom)
-            drawLine(labelColor.copy(alpha = 0.6f), Offset(x, top), Offset(x, bottom),
-                strokeWidth = 1.dp.toPx())
-            drawCircle(cardColor, 5.dp.toPx(), Offset(x, py))
-            drawCircle(colorAt(value), 3.5.dp.toPx(), Offset(x, py))
-            val whenText = if (secondsAgo < 60) now
-            else "${secondsAgo / 60} $minutes $ago"
-            val text = measurer.measure("${format(value)} · $whenText", bubbleText)
-            val pad = 8.dp.toPx()
-            val w = text.size.width + 2 * pad
-            val h = text.size.height + pad
-            val bx = (x - w / 2).coerceIn(0f, (right - w).coerceAtLeast(0f))
-            val by = top
-            drawRoundRect(bubbleColor, Offset(bx, by), Size(w, h), CornerRadius(h / 2))
-            drawText(text, topLeft = Offset(bx + pad, by + pad / 2))
+        // Newest value: a dot with a soft halo, only while the line is live.
+        val n = ts.size - 1
+        if (now - lastTime <= gapMs) {
+            val c = colorAt(vs[n])
+            drawCircle(c.copy(alpha = 0.25f), 8.dp.toPx(), Offset(xs[n], ys[n]))
+            drawCircle(cardColor, 4.5.dp.toPx(), Offset(xs[n], ys[n]))
+            drawCircle(c, 3.dp.toPx(), Offset(xs[n], ys[n]))
         }
+
+        // Scrubbing: the point under the finger.
+        val tx = touchX ?: return@Canvas
+        val px = tx.coerceIn(0f, right)
+        var nearest = xs.binarySearch(px).let { if (it < 0) -it - 1 else it }
+        if (nearest >= xs.size || (nearest > 0 && px - xs[nearest - 1] < xs[nearest] - px)) {
+            nearest--
+        }
+        if (nearest < 0 || kotlin.math.abs(xs[nearest] - px) > gapMs * pxPerMs) return@Canvas
+        val value = vs[nearest]
+        val qx = xs[nearest]
+        val qy = ys[nearest]
+        drawLine(labelColor.copy(alpha = 0.6f), Offset(qx, top), Offset(qx, bottom),
+            strokeWidth = 1.dp.toPx())
+        drawCircle(cardColor, 5.dp.toPx(), Offset(qx, qy))
+        drawCircle(colorAt(value), 3.5.dp.toPx(), Offset(qx, qy))
+        val minutesAgo = ((now - ts[nearest]) / 60000).toInt()
+        val whenText = if (minutesAgo < 1) nowLabel else "$minutesAgo $minutes $ago"
+        val text = measurer.measure("${format(value)} · $whenText", bubbleText)
+        val pad = 8.dp.toPx()
+        val w = text.size.width + 2 * pad
+        val h = text.size.height + pad
+        val bx = (qx - w / 2).coerceIn(0f, (right - w).coerceAtLeast(0f))
+        drawRoundRect(bubbleColor, Offset(bx, top), Size(w, h), CornerRadius(h / 2))
+        drawText(text, topLeft = Offset(bx + pad, top + pad / 2))
+    }
+}
+
+/** Time of the sample before index [i], or a very old time if there is none. */
+private fun prevTime(times: LongArray, i: Int): Long =
+    if (i > 0) times[i - 1] else Long.MIN_VALUE / 2
+
+/**
+ * Monotone cubic (Fritsch-Carlson) through points [a] until [b]: it never
+ * overshoots past its neighbours, so peaks and flat runs stay as measured.
+ */
+private fun monotone(path: Path, xs: FloatArray, ys: FloatArray, a: Int, b: Int) {
+    path.moveTo(xs[a], ys[a])
+    val n = b - a
+    if (n == 1) {
+        path.lineTo(xs[a] + 1f, ys[a])
+        return
+    }
+    val d = FloatArray(n - 1) { (ys[a + it + 1] - ys[a + it]) / (xs[a + it + 1] - xs[a + it]) }
+    val m = FloatArray(n)
+    m[0] = d[0]
+    m[n - 1] = d[n - 2]
+    for (k in 1 until n - 1) {
+        m[k] = if (d[k - 1] * d[k] <= 0f) 0f else (d[k - 1] + d[k]) / 2f
+    }
+    for (k in 0 until n - 1) {
+        if (d[k] == 0f) {
+            m[k] = 0f
+            m[k + 1] = 0f
+            continue
+        }
+        val p = m[k] / d[k]
+        val q = m[k + 1] / d[k]
+        val s = p * p + q * q
+        if (s > 9f) {
+            val t = 3f / kotlin.math.sqrt(s)
+            m[k] = t * p * d[k]
+            m[k + 1] = t * q * d[k]
+        }
+    }
+    for (k in 0 until n - 1) {
+        val x0 = xs[a + k]
+        val x1 = xs[a + k + 1]
+        val h = (x1 - x0) / 3f
+        path.cubicTo(x0 + h, ys[a + k] + m[k] * h, x1 - h, ys[a + k + 1] - m[k + 1] * h,
+            x1, ys[a + k + 1])
     }
 }
 

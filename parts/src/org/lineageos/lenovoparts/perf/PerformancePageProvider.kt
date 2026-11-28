@@ -43,6 +43,7 @@ import java.util.Locale
 import kotlin.math.roundToInt
 import org.lineageos.lenovoparts.R
 import org.lineageos.lenovoparts.ui.AreaChart
+import org.lineageos.lenovoparts.ui.Samples
 import org.lineageos.lenovoparts.ui.Metric
 import org.lineageos.lenovoparts.ui.MetricGrid
 import org.lineageos.lenovoparts.ui.PartsScaffold
@@ -116,29 +117,29 @@ private fun LoadCard(state: PerfState?) {
             Text(stringResource(R.string.load_graph_title),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            LoadRow(stringResource(R.string.load_cpu), state?.cpuHistory,
+            LoadRow(stringResource(R.string.load_cpu), state?.cpuHistory, state?.now ?: 0L,
                 colorResource(R.color.graph_cpu))
-            LoadRow(stringResource(R.string.load_gpu), state?.gpuHistory,
+            LoadRow(stringResource(R.string.load_gpu), state?.gpuHistory, state?.now ?: 0L,
                 colorResource(R.color.graph_gpu))
-            LoadRow(stringResource(R.string.load_ram), state?.ramHistory,
+            LoadRow(stringResource(R.string.load_ram), state?.ramHistory, state?.now ?: 0L,
                 colorResource(R.color.graph_ram))
         }
     }
 }
 
 @Composable
-private fun LoadRow(label: String, history: FloatArray?, color: Color) {
-    val samples = history ?: FloatArray(0)
+private fun LoadRow(label: String, history: Samples?, now: Long, color: Color) {
+    val samples = history ?: Samples.EMPTY
     Column(Modifier.padding(top = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.weight(1f))
-            Text(if (samples.isEmpty()) "—" else "${samples.last().roundToInt()}%",
+            Text(samples.lastOrNull()?.let { "${it.roundToInt()}%" } ?: "—",
                 style = MaterialTheme.typography.titleMedium, color = color)
         }
         AreaChart(
-            samples = samples, window = 600, min = 0f, max = 100f, color = color,
+            samples = samples, now = now, min = 0f, max = 100f, color = color,
             gridLines = listOf(100f to "100%", 50f to "50%", 0f to "0%"),
             format = { "${it.roundToInt()}%" },
             height = 110.dp,
