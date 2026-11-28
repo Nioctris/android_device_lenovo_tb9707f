@@ -7,10 +7,9 @@ package org.lineageos.lenovoparts.perf;
 
 import android.content.Context;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+
+import org.lineageos.lenovoparts.Sysfs;
 
 /** CPU clusters, GPU, temperatures and memory, read once per refresh. */
 public final class PerfStats {
@@ -30,40 +29,72 @@ public final class PerfStats {
     float cpuTemp = Float.NaN, gpuTemp = Float.NaN, skinTemp = Float.NaN;
     public long memTotalKb, memAvailKb, swapTotalKb, swapFreeKb;
 
-    /** Previous per-core usage, to turn the cumulative counters into a load. */
+    /** Previous per-core idle time, to turn the cumulative counters into a load. */
     public static final class Sampler {
-        private long[] mActive;
-        private long[] mTotal;
+        private static final int CPUS = 8;
+        private static final String KGSL = "/sys/class/kgsl/kgsl-3d0/";
+
+        private static final Sysfs.Node GPU_BUSY = new Sysfs.Node(KGSL + "gpu_busy_percentage");
+        private static final Sysfs.Node MEMINFO = new Sysfs.Node("/proc/meminfo");
+
+        private final Sysfs.Node[] mOnline = new Sysfs.Node[CPUS];
+        private final Sysfs.Node[] mIsolate = new Sysfs.Node[CPUS];
+        private final Sysfs.Node[][] mIdle = new Sysfs.Node[CPUS][];
+        private final long[] mIdleNow = new long[CPUS];
+        private final boolean[] mOnlineNow = new boolean[CPUS];
+        private long[] mIdlePrev;
+        private long mTimePrev;
+        private String[] mCpuZones;
+        private String[] mGpuZones;
+        private String[] mSkinZones;
 
         public Sampler(Context context) {
+            for (int cpu = 0; cpu < CPUS; cpu++) {
+                String dir = "/sys/devices/system/cpu/cpu" + cpu;
+                mOnline[cpu] = new Sysfs.Node(dir + "/online");
+                mIsolate[cpu] = new Sysfs.Node(dir + "/isolate");
+                int states = 0;
+                while (new File(dir + "/cpuidle/state" + states + "/time").exists()) {
+                    states++;
+                }
+                mIdle[cpu] = new Sysfs.Node[states];
+                for (int st = 0; st < states; st++) {
+                    mIdle[cpu][st] = new Sysfs.Node(dir + "/cpuidle/state" + st + "/time");
+                }
+            }
         }
 
+        /** Everything shown on the page. */
         public PerfStats read() {
+            return read(true);
+        }
+
+        /**
+         * With [full] false, only what the charts need: CPU and GPU load
+         * and memory, without frequencies and temperatures.
+         */
+        public PerfStats read(boolean full) {
             PerfStats s = new PerfStats();
             for (int i = 0; i < CLUSTERS.length; i++) {
                 Cluster c = new Cluster();
-                String policy = "/sys/devices/system/cpu/cpufreq/policy" + POLICIES[i] + "/";
-                c.curKhz = num(policy + "scaling_cur_freq");
-                c.minKhz = num(policy + "scaling_min_freq");
-                c.maxKhz = num(policy + "scaling_max_freq");
+                if (full) {
+                    String policy = "/sys/devices/system/cpu/cpufreq/policy" + POLICIES[i] + "/";
+                    c.curKhz = num(policy + "scaling_cur_freq");
+                    c.minKhz = num(policy + "scaling_min_freq");
+                    c.maxKhz = num(policy + "scaling_max_freq");
+                }
                 s.clusters[i] = c;
             }
             readLoad(s);
 
-            String kgsl = "/sys/class/kgsl/kgsl-3d0/";
-            s.gpuHz = num(kgsl + "gpuclk");
-            s.gpuMaxHz = num(kgsl + "max_gpuclk");
-            String busy = str(kgsl + "gpu_busy_percentage");
-            if (busy != null) {
-                try {
-                    s.gpuBusy = Integer.parseInt(busy.replace("%", "").trim());
-                } catch (NumberFormatException e) {
-                    // keep unknown
-                }
+            long busy = GPU_BUSY.readLong();
+            s.gpuBusy = busy == Sysfs.NONE ? -1 : (int) busy;
+            if (full) {
+                s.gpuHz = num(KGSL + "gpuclk");
+                s.gpuMaxHz = num(KGSL + "max_gpuclk");
+                readThermal(s);
             }
-
-            readThermal(s);
-            readMemory(s);
+            readMemory(s, MEMINFO);
             return s;
         }
 
@@ -73,35 +104,30 @@ public final class PerfStats {
          * CPU usage on AIDL, and apps may not read /proc/stat.
          */
         private void readLoad(PerfStats s) {
-            int cpus = 8;
             long now = android.os.SystemClock.elapsedRealtimeNanos() / 1000;
-            long[] idle = new long[cpus];
-            boolean[] online = new boolean[cpus];
-            for (int cpu = 0; cpu < cpus; cpu++) {
-                String dir = "/sys/devices/system/cpu/cpu" + cpu;
+            for (int cpu = 0; cpu < CPUS; cpu++) {
                 // cpu0 has no online node. core_ctl isolates (parks) idle
                 // cores; their idle counters stop as well.
-                online[cpu] = num(dir + "/online") != 0 && num(dir + "/isolate") != 1;
-                String base = "/sys/devices/system/cpu/cpu" + cpu + "/cpuidle/state";
+                mOnlineNow[cpu] = mOnline[cpu].readLong() != 0
+                        && mIsolate[cpu].readLong() != 1;
                 long sum = 0;
-                for (int state = 0; state < 8; state++) {
-                    long t = num(base + state + "/time");
-                    if (t == Long.MIN_VALUE) {
-                        break;
+                for (Sysfs.Node node : mIdle[cpu]) {
+                    long t = node.readLong();
+                    if (t != Sysfs.NONE) {
+                        sum += t;
                     }
-                    sum += t;
                 }
-                idle[cpu] = sum;
+                mIdleNow[cpu] = sum;
             }
-            if (mActive != null) {
-                long wall = now - mTotal[0];
+            if (mIdlePrev != null) {
+                long wall = now - mTimePrev;
                 for (int c = 0; c < CLUSTERS.length; c++) {
                     long busy = 0;
                     for (int cpu : CLUSTERS[c]) {
-                        if (!online[cpu]) {
+                        if (!mOnlineNow[cpu]) {
                             continue; // an offline or isolated core is idle
                         }
-                        long di = idle[cpu] - mActive[cpu];
+                        long di = mIdleNow[cpu] - mIdlePrev[cpu];
                         busy += Math.max(0, wall - Math.min(wall, di));
                     }
                     if (wall > 0) {
@@ -109,79 +135,107 @@ public final class PerfStats {
                                 Math.round(100.0 * busy / (wall * CLUSTERS[c].length)));
                     }
                 }
+            } else {
+                mIdlePrev = new long[CPUS];
             }
-            mActive = idle;
-            mTotal = new long[] {now};
+            System.arraycopy(mIdleNow, 0, mIdlePrev, 0, CPUS);
+            mTimePrev = now;
+        }
+
+        /** The thermal zones of interest, looked up once by their type. */
+        private void findZones() {
+            java.util.List<String> cpu = new java.util.ArrayList<>();
+            java.util.List<String> gpu = new java.util.ArrayList<>();
+            java.util.List<String> skin = new java.util.ArrayList<>();
+            File[] zones = new File("/sys/class/thermal").listFiles(
+                    (dir, name) -> name.startsWith("thermal_zone"));
+            if (zones != null) {
+                for (File zone : zones) {
+                    String type = Sysfs.readString(zone + "/type");
+                    if (type == null) {
+                        continue;
+                    }
+                    String temp = zone + "/temp";
+                    if (type.startsWith("cpu-") || type.startsWith("cpuss-")) {
+                        cpu.add(temp);
+                    } else if (type.startsWith("gpuss-")) {
+                        gpu.add(temp);
+                    } else if (type.startsWith("skin") || type.startsWith("quiet-therm")
+                            || type.startsWith("xo-therm")) {
+                        skin.add(temp);
+                    }
+                }
+            }
+            mCpuZones = cpu.toArray(new String[0]);
+            mGpuZones = gpu.toArray(new String[0]);
+            mSkinZones = skin.toArray(new String[0]);
+        }
+
+        private void readThermal(PerfStats s) {
+            if (mCpuZones == null) {
+                findZones();
+            }
+            s.cpuTemp = maxTemp(mCpuZones);
+            s.gpuTemp = maxTemp(mGpuZones);
+            s.skinTemp = maxTemp(mSkinZones);
         }
     }
 
-    private static void readThermal(PerfStats s) {
-        File[] zones = new File("/sys/class/thermal").listFiles(
-                (dir, name) -> name.startsWith("thermal_zone"));
-        if (zones == null) {
-            return;
-        }
-        for (File zone : zones) {
-            String type = str(zone + "/type");
-            if (type == null) {
-                continue;
-            }
-            long milli = num(zone + "/temp");
-            if (milli == Long.MIN_VALUE || milli <= -40000 || milli > 150000) {
+    private static float maxTemp(String[] zones) {
+        float max = Float.NaN;
+        for (String zone : zones) {
+            long milli = Sysfs.readLong(zone);
+            if (milli == Sysfs.NONE || milli <= -40000 || milli > 150000) {
                 continue;
             }
             float c = milli / 1000f;
-            if (type.startsWith("cpu-") || type.startsWith("cpuss-")) {
-                s.cpuTemp = Float.isNaN(s.cpuTemp) ? c : Math.max(s.cpuTemp, c);
-            } else if (type.startsWith("gpuss-")) {
-                s.gpuTemp = Float.isNaN(s.gpuTemp) ? c : Math.max(s.gpuTemp, c);
-            } else if (type.startsWith("skin") || type.startsWith("quiet-therm")
-                    || type.startsWith("xo-therm")) {
-                s.skinTemp = Float.isNaN(s.skinTemp) ? c : Math.max(s.skinTemp, c);
+            max = Float.isNaN(max) ? c : Math.max(max, c);
+        }
+        return max;
+    }
+
+    /** MemTotal, MemAvailable, SwapTotal and SwapFree from /proc/meminfo. */
+    private static void readMemory(PerfStats s, Sysfs.Node meminfo) {
+        byte[] buf = Sysfs.buffer();
+        int n = meminfo.read(buf);
+        int line = 0;
+        while (line < n) {
+            int colon = line;
+            while (colon < n && buf[colon] != ':' && buf[colon] != '\n') {
+                colon++;
             }
+            if (colon < n && buf[colon] == ':') {
+                if (key(buf, line, colon, "MemTotal")) {
+                    s.memTotalKb = Sysfs.parseLong(buf, colon + 1, n);
+                } else if (key(buf, line, colon, "MemAvailable")) {
+                    s.memAvailKb = Sysfs.parseLong(buf, colon + 1, n);
+                } else if (key(buf, line, colon, "SwapTotal")) {
+                    s.swapTotalKb = Sysfs.parseLong(buf, colon + 1, n);
+                } else if (key(buf, line, colon, "SwapFree")) {
+                    s.swapFreeKb = Sysfs.parseLong(buf, colon + 1, n);
+                    return; // the last one needed
+                }
+            }
+            while (line < n && buf[line] != '\n') {
+                line++;
+            }
+            line++;
         }
     }
 
-    private static void readMemory(PerfStats s) {
-        try (BufferedReader r = new BufferedReader(new FileReader("/proc/meminfo"))) {
-            String line;
-            while ((line = r.readLine()) != null) {
-                String[] f = line.split("\\s+");
-                if (f.length < 2) {
-                    continue;
-                }
-                long kb = Long.parseLong(f[1]);
-                switch (f[0]) {
-                    case "MemTotal:": s.memTotalKb = kb; break;
-                    case "MemAvailable:": s.memAvailKb = kb; break;
-                    case "SwapTotal:": s.swapTotalKb = kb; break;
-                    case "SwapFree:": s.swapFreeKb = kb; break;
-                    default: break;
-                }
+    private static boolean key(byte[] buf, int from, int to, String key) {
+        if (to - from != key.length()) {
+            return false;
+        }
+        for (int i = 0; i < key.length(); i++) {
+            if (buf[from + i] != key.charAt(i)) {
+                return false;
             }
-        } catch (IOException | NumberFormatException e) {
-            // leave zeros
         }
-    }
-
-    private static String str(String path) {
-        try (BufferedReader r = new BufferedReader(new FileReader(path))) {
-            String line = r.readLine();
-            return line != null ? line.trim() : null;
-        } catch (IOException e) {
-            return null;
-        }
+        return true;
     }
 
     private static long num(String path) {
-        String v = str(path);
-        if (v == null) {
-            return Long.MIN_VALUE;
-        }
-        try {
-            return Long.parseLong(v);
-        } catch (NumberFormatException e) {
-            return Long.MIN_VALUE;
-        }
+        return Sysfs.readLong(path);
     }
 }

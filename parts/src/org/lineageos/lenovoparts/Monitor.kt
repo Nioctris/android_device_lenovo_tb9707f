@@ -45,7 +45,7 @@ object Monitor {
     val ram = Series(CAPACITY)
 
     private val _latest = MutableStateFlow<Reading?>(null)
-    /** The newest reading; a new value means the series have grown. */
+    /** The newest full reading while observed; a new value means the series have grown. */
     val latest: StateFlow<Reading?> = _latest.asStateFlow()
 
     private var started = false
@@ -65,8 +65,12 @@ object Monitor {
 
     private fun sample(sampler: PerfStats.Sampler) {
         val time = SystemClock.elapsedRealtime()
-        val p = PowerStats.read()
-        val s = sampler.read()
+        // Full readings only while a page shows them; the charts alone need
+        // just a handful of nodes.
+        val full = _latest.subscriptionCount.value > 0
+        val p = if (full) PowerStats.read() else null
+        val watts = p?.batteryWatts() ?: PowerStats.readBatteryWatts()
+        val s = sampler.read(full)
         var cores = 0
         var total = 0f
         for (i in s.clusters.indices) {
@@ -81,12 +85,14 @@ object Monitor {
         val ramLoad = if (s.memTotalKb > 0)
             100f * (s.memTotalKb - s.memAvailKb) / s.memTotalKb else -1f
 
-        power.add(time, p.batteryWatts().toFloat())
-        // Unknown readings repeat the last value.
-        // The first CPU reading has no previous one to compare with.
+        if (!watts.isNaN()) power.add(time, watts.toFloat())
+        // Unknown readings repeat the last value; the first CPU reading has
+        // no previous one to compare with.
         (if (cpuLoad >= 0) cpuLoad else cpu.last())?.let { cpu.add(time, it) }
         gpu.add(time, if (s.gpuBusy >= 0) s.gpuBusy.toFloat() else gpu.last() ?: 0f)
         ram.add(time, if (ramLoad >= 0) ramLoad else ram.last() ?: 0f)
-        _latest.value = Reading(time, p, s, cpuLoad, ramLoad)
+        // Without a page, drop the last reading so the next one to subscribe
+        // waits for a full reading instead of getting a stale one.
+        _latest.value = if (p != null) Reading(time, p, s, cpuLoad, ramLoad) else null
     }
 }

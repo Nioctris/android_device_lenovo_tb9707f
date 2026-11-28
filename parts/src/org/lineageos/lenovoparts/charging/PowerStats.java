@@ -5,14 +5,14 @@
 
 package org.lineageos.lenovoparts.charging;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import org.lineageos.lenovoparts.Sysfs;
 
 /** One reading of the charger, charge pumps and battery gauges. */
 public final class PowerStats {
 
     private static final String PSY = "/sys/class/power_supply/";
+    private static final Sysfs.Node CURRENT = new Sysfs.Node(PSY + "battery/current_now");
+    private static final Sysfs.Node VOLTAGE = new Sysfs.Node(PSY + "battery/voltage_now");
 
     /* Battery (FG Gen4 through the PMIC charger) */
     String status;
@@ -72,6 +72,13 @@ public final class PowerStats {
         return s;
     }
 
+    /** Battery power alone, for the background chart. */
+    public static double readBatteryWatts() {
+        long ua = CURRENT.readLong();
+        long uv = VOLTAGE.readLong();
+        return valid(ua) && valid(uv) ? ua * (double) uv / 1e12 : Double.NaN;
+    }
+
     /** Battery power in watts, positive while charging. */
     public double batteryWatts() {
         return batteryUa * (double) batteryUv / 1e12;
@@ -91,24 +98,11 @@ public final class PowerStats {
     }
 
     private static String str(String node) {
-        try (BufferedReader r = new BufferedReader(new FileReader(PSY + node))) {
-            String line = r.readLine();
-            return line != null ? line.trim() : null;
-        } catch (IOException e) {
-            return null;
-        }
+        return Sysfs.readString(PSY + node);
     }
 
     private static long num(String node) {
-        String v = str(node);
-        if (v == null) {
-            return Long.MIN_VALUE;
-        }
-        try {
-            return Long.parseLong(v);
-        } catch (NumberFormatException e) {
-            return Long.MIN_VALUE;
-        }
+        return Sysfs.readLong(PSY + node);
     }
 
     static boolean valid(long v) {
